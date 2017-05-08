@@ -2,4 +2,5 @@
 #define LOG_H_
 
 void logRunningInfo(char *s);
+void ClearLog();
 #endif
