@@ -16,10 +16,11 @@
 	#include "log.h"
 	#include "util.h"
 	#include "absyn.h"
+	#include "errormsg.h"
 	extern int yylex(void);
 	extern A_exp root;
 
-#line 11 "frame.y"
+#line 12 "frame.y"
 typedef union {
 	int iVal;
 	A_exp expVal;
@@ -82,7 +83,7 @@ static const short yyrhs[] = {     8,
 
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
-    23,    30,    32
+    24,    31,    33
 };
 #endif
 
@@ -573,20 +574,20 @@ yyreduce:
   switch (yyn) {
 
 case 1:
-#line 24 "frame.y"
+#line 25 "frame.y"
 { 
 		logRunningInfo("Parse Exp Begin");
 		root = yyvsp[0].expVal;
-		logRunningInfo("Parse Exp End v2!");
+		logRunningInfo("Parse Exp End");
 	;
     break;}
 case 2:
-#line 31 "frame.y"
-{ yyval.expVal = A_LetExp(yyvsp[-1].expVal); ;
+#line 32 "frame.y"
+{ yyval.expVal = A_LetExp(EM_tokPos,NULL,yyvsp[-1].expVal); ;
     break;}
 case 3:
-#line 32 "frame.y"
-{ yyval.expVal = A_IntExp(yylval.iVal); ;
+#line 33 "frame.y"
+{ yyval.expVal = A_IntExp(EM_tokPos,yylval.iVal); ;
     break;}
 }
    /* the action file gets copied in in place of this dollarsign */
@@ -783,9 +784,9 @@ yyerrhandle:
   yystate = yyn;
   goto yynewstate;
 }
-#line 35 "frame.y"
+#line 36 "frame.y"
 
 yyerror(char *s){
-	
+	return 0;
 }
 

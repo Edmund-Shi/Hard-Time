@@ -282,11 +282,11 @@ static void yy_fatal_error YY_PROTO(( yyconst char msg[] ));
 	*yy_cp = '\0'; \
 	yy_c_buf_p = yy_cp;
 
-#define YY_NUM_RULES 7
-#define YY_END_OF_BUFFER 8
+#define YY_NUM_RULES 8
+#define YY_END_OF_BUFFER 9
 static yyconst short int yy_accept[18] =
     {   0,
-        0,    0,    8,    6,    5,    5,    4,    6,    6,    6,
+        0,    0,    9,    7,    5,    6,    4,    7,    7,    7,
         4,    0,    2,    0,    3,    1,    0
     } ;
 
@@ -373,7 +373,21 @@ char *yytext;
 #include "absyn.h"
 #include "util.h"
 #include "frame.tab.h"
-#line 377 "lex.yy.c"
+#include "errormsg.h"
+
+int charPos = 1;
+
+int yywrap(void){
+	charPos = 1;
+	return 1;
+}
+
+void adjust(void){
+	EM_tokPos = charPos;
+	charPos += yyleng;
+}
+
+#line 391 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -524,10 +538,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 12 "frame.l"
+#line 26 "frame.l"
 
 
-#line 531 "lex.yy.c"
+#line 545 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -612,43 +626,48 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 14 "frame.l"
+#line 28 "frame.l"
 { return LET; }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 15 "frame.l"
+#line 29 "frame.l"
 { return IN; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 16 "frame.l"
+#line 30 "frame.l"
 { return END; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 18 "frame.l"
+#line 32 "frame.l"
 { 
 	yylval.iVal = atoi(yytext); 
 	return INTT; 
-	}
+}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 23 "frame.l"
+#line 37 "frame.l"
 { }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 24 "frame.l"
-{ logRunningInfo(yytext); }
+#line 38 "frame.l"
+{EM_newline();}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 26 "frame.l"
+#line 39 "frame.l"
+{ logRunningInfo(yytext); }
+	YY_BREAK
+case 8:
+YY_RULE_SETUP
+#line 41 "frame.l"
 ECHO;
 	YY_BREAK
-#line 652 "lex.yy.c"
+#line 671 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1534,9 +1553,5 @@ int main()
 	return 0;
 	}
 #endif
-#line 26 "frame.l"
+#line 41 "frame.l"
 
-
-int yywrap(void){
-	return 1;
-}
