@@ -8,7 +8,6 @@
 #include "errormsg.h"
 
 int charPos = 1;
-
 int yywrap(void){
 	charPos = 1;
 	return 1;
@@ -69,7 +68,11 @@ to 	{ adjust(); return TO;}
 type	{ adjust(); return TYPE;}
 var 	{ adjust(); return VAR;}
 while   { adjust(); return WHILE;}
-{id}	{ adjust(); return ID;}
+{id}	{ 
+	adjust(); 
+	yylval.sval = String(yytext);
+	return ID;
+}
 {int_val} { 
 	adjust();
 	yylval.ival = atoi(yytext); 

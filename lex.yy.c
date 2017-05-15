@@ -431,7 +431,6 @@ char *yytext;
 #include "errormsg.h"
 
 int charPos = 1;
-
 int yywrap(void){
 	charPos = 1;
 	return 1;
@@ -443,7 +442,7 @@ void adjust(void){
 }
 
 /* Need to add token to deal with comments and string !*/
-#line 447 "lex.yy.c"
+#line 446 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -594,9 +593,9 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 29 "frame.l"
+#line 28 "frame.l"
 
-#line 600 "lex.yy.c"
+#line 599 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -681,222 +680,226 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 30 "frame.l"
+#line 29 "frame.l"
 { adjust(); }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 31 "frame.l"
+#line 30 "frame.l"
 { adjust(); EM_newline();}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 32 "frame.l"
+#line 31 "frame.l"
 { adjust(); return COMMA;}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 33 "frame.l"
+#line 32 "frame.l"
 { adjust(); return ASSIGN;}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 34 "frame.l"
+#line 33 "frame.l"
 { adjust(); return SEMICOLON; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 35 "frame.l"
+#line 34 "frame.l"
 { adjust(); return COLON;}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 36 "frame.l"
+#line 35 "frame.l"
 { adjust(); return LPAREN;}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 37 "frame.l"
+#line 36 "frame.l"
 { adjust(); return RPAREN;}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 38 "frame.l"
+#line 37 "frame.l"
 { adjust(); return LBRACE; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 39 "frame.l"
+#line 38 "frame.l"
 { adjust(); return RBRACE; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 40 "frame.l"
+#line 39 "frame.l"
 { adjust(); return LBRACK; }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 41 "frame.l"
+#line 40 "frame.l"
 { adjust(); return RBRACK; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 42 "frame.l"
+#line 41 "frame.l"
 { adjust(); return DOT; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 43 "frame.l"
+#line 42 "frame.l"
 { adjust(); return PLUS; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 44 "frame.l"
+#line 43 "frame.l"
 { adjust(); return MINUS; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 45 "frame.l"
+#line 44 "frame.l"
 { adjust(); return TIMES;}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 46 "frame.l"
+#line 45 "frame.l"
 { adjust(); return DIVIDE; }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 47 "frame.l"
+#line 46 "frame.l"
 { adjust(); return EQ;}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 48 "frame.l"
+#line 47 "frame.l"
 { adjust(); return NEQ;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 49 "frame.l"
+#line 48 "frame.l"
 { adjust(); return LE; }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 50 "frame.l"
+#line 49 "frame.l"
 { adjust(); return LT;}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 51 "frame.l"
+#line 50 "frame.l"
 { adjust(); return GE;}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 52 "frame.l"
+#line 51 "frame.l"
 { adjust(); return GT;}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 53 "frame.l"
+#line 52 "frame.l"
 { adjust(); return AND;}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 54 "frame.l"
+#line 53 "frame.l"
 { adjust(); return OR;}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 55 "frame.l"
+#line 54 "frame.l"
 { adjust(); return ARRAY;}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 56 "frame.l"
+#line 55 "frame.l"
 { adjust(); return BREAK;}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 57 "frame.l"
+#line 56 "frame.l"
 { adjust(); return DO;}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 58 "frame.l"
+#line 57 "frame.l"
 { adjust(); return END;}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 59 "frame.l"
+#line 58 "frame.l"
 { adjust(); return ELSE;}
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 60 "frame.l"
+#line 59 "frame.l"
 {adjust(); return FUNCTION;}
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 61 "frame.l"
+#line 60 "frame.l"
 { adjust(); return FOR;}
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 62 "frame.l"
+#line 61 "frame.l"
 { adjust(); return IF;}
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 63 "frame.l"
+#line 62 "frame.l"
 { adjust(); return IN;}
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 64 "frame.l"
+#line 63 "frame.l"
 { adjust(); return LET;}
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 65 "frame.l"
+#line 64 "frame.l"
 { adjust(); return OF;}
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 66 "frame.l"
+#line 65 "frame.l"
 { adjust(); return NIL;}
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 67 "frame.l"
+#line 66 "frame.l"
 { adjust(); return THEN;}
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 68 "frame.l"
+#line 67 "frame.l"
 { adjust(); return TO;}
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 69 "frame.l"
+#line 68 "frame.l"
 { adjust(); return TYPE;}
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 70 "frame.l"
+#line 69 "frame.l"
 { adjust(); return VAR;}
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 71 "frame.l"
+#line 70 "frame.l"
 { adjust(); return WHILE;}
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 72 "frame.l"
-{ adjust(); return ID;}
+#line 71 "frame.l"
+{ 
+	adjust(); 
+	yylval.sval = String(yytext);
+	return ID;
+}
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 73 "frame.l"
+#line 76 "frame.l"
 { 
 	adjust();
 	yylval.ival = atoi(yytext); 
@@ -905,15 +908,15 @@ YY_RULE_SETUP
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 79 "frame.l"
+#line 82 "frame.l"
 { logRunningInfo(yytext); }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 81 "frame.l"
+#line 84 "frame.l"
 ECHO;
 	YY_BREAK
-#line 917 "lex.yy.c"
+#line 920 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1799,5 +1802,5 @@ int main()
 	return 0;
 	}
 #endif
-#line 81 "frame.l"
+#line 84 "frame.l"
 

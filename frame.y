@@ -47,12 +47,14 @@
 %token <sval> STRING
 
 %type <exp> exp
+%type <sym> id
 %type <var> lvalue lvalue_ext
 %type <explist> expseq expseq1 args args1
 %type <type_p> ty
 %type <flist> tyfields tyfields1
 %type <fdeclist> funcdec
 %type <dec_List> decs
+%type <name_type> typedec
 %type <decl> vardec
 %type <e_list> recfield recfield1
 
@@ -90,8 +92,7 @@ ProgramRoot:
 	}
 	;
 exp:
-	LET IN exp END { $$ = A_LetExp(EM_tokPos,NULL,$3); }
-	|SRING { $$ = A_StringExp(EM_tokPos,yyval.sval); }
+	STRING { $$ = A_StringExp(EM_tokPos,yyval.sval); }
 	|INTT { $$ = A_IntExp(EM_tokPos,yylval.ival); }
 	|NIL {$$ = A_NilExp(EM_tokPos);}
 	|lvalue	{ $$ = A_VarExp(EM_tokPos,$1); }
@@ -100,12 +101,12 @@ exp:
 		| exp DIVIDE exp { $$ = A_OpExp(EM_tokPos,A_divideOp,$1,$3);}
 		| exp PLUS exp { $$ = A_OpExp(EM_tokPos,A_plusOp,$1,$3); }
 		| exp MINUS exp { $$ = A_OpExp(EM_tokPos, A_minusOp,$1,$3);}
-		| exp EQ exp { $$ = A_ExpOp(EM_tokPos,A_eqOp,$1,$3);}
-		| exp NEQ exp { $$ = A_ExpOp(EM_tokPos,A_neqOp,$1,$3);}
-		| exp LT exp { $$ = A_ExpOp(EM_tokPos,A_ltOp,$1,$3);}
-		| exp LE exp { $$ = A_ExpOp(EM_tokPos,A_leOp,$1,$3);}
-		| exp GT exp { $$ = A_ExpOp(EM_tokPos,A_gtOp,$1,$3);}
-		| exp GE exp { $$ = A_ExpOp(EM_tokPos,A_geOp,$1,$3);}
+		| exp EQ exp { $$ = A_OpExp(EM_tokPos,A_eqOp,$1,$3);}
+		| exp NEQ exp { $$ = A_OpExp(EM_tokPos,A_neqOp,$1,$3);}
+		| exp LT exp { $$ = A_OpExp(EM_tokPos,A_ltOp,$1,$3);}
+		| exp LE exp { $$ = A_OpExp(EM_tokPos,A_leOp,$1,$3);}
+		| exp GT exp { $$ = A_OpExp(EM_tokPos,A_gtOp,$1,$3);}
+		| exp GE exp { $$ = A_OpExp(EM_tokPos,A_geOp,$1,$3);}
 		| exp AND exp {$$ = A_IfExp(EM_tokPos,$1,$3,A_IntExp(EM_tokPos,0));}
 		| exp OR exp { $$ = A_IfExp(EM_tokPos,$1,A_IntExp(EM_tokPos,1),$3);}
 	|lvalue ASSIGN exp {$$ = A_AssignExp(EM_tokPos,$1,$3);}
@@ -116,7 +117,7 @@ exp:
 	|IF exp THEN exp {$$ = A_IfExp(EM_tokPos,$2,$4,A_NilExp(EM_tokPos));}
 	|IF exp THEN exp ELSE exp {$$ = A_IfExp(EM_tokPos,$2,$4,$6);}
 	|WHILE exp DO exp { $$ = A_WhileExp(EM_tokPos,$2,$4);}
-	|FOR id ASSIGN exp TO exp DO exp {$$ = A_ForExp(EM_tokPos,$2,$4,$5,$8);}
+	|FOR id ASSIGN exp TO exp DO exp {$$ = A_ForExp(EM_tokPos,$2,$4,$6,$8);}
 	|BREAK {$$=A_BreakExp(EM_tokPos);}
 	|LET decs IN expseq END { $$ = A_LetExp(EM_tokPos,$2,A_SeqExp(EM_tokPos,$4));}
 	;
