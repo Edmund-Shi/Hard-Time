@@ -5,7 +5,7 @@
 void assert(int errno){
 	switch (errno){
 		case 0: {
-			logRunningInfo("Unknow Error!\n");
+			Log("Assert 0", "Unknow Error!\nExit program!");
 			exit(0);
 			return;
 		}

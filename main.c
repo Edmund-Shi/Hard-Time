@@ -12,14 +12,17 @@ int main(void){
 	FILE *absynTree;
 	absynTree = fopen("AbsynTree.txt", "w");
 	if (absynTree == NULL){
+		printf("Can't open abtree file!\n");
 		exit(0);
 	}
 	ClearLog();
+	openLog(); /*open log at the beginnig and colse it before exit*/
 	yyparse();
 	//SEM_transProg(root);
 
 	pr_exp(absynTree, root, 0);
 	fclose(absynTree);
 	printf("Parse Done\n");
+	closeLog();
 	return 0;
 }

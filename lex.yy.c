@@ -909,7 +909,7 @@ YY_RULE_SETUP
 case 45:
 YY_RULE_SETUP
 #line 82 "frame.l"
-{ logRunningInfo(yytext); }
+{ /*Log("Lex analyse","Unknown token:%s",yytext);*/ EM_error(EM_tokPos,"Unknown token:%s",yytext); }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP

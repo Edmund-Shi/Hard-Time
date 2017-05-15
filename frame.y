@@ -86,9 +86,7 @@
 
 ProgramRoot:
 	exp { 
-		logRunningInfo("Parse Exp Begin");
 		root = $1;
-		logRunningInfo("Parse Exp End");
 	}
 	;
 exp:

@@ -184,13 +184,13 @@ static const short yyrhs[] = {    47,
 
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
-    87,    94,    96,    97,    98,    99,   100,   101,   102,   103,
-   104,   105,   106,   107,   108,   109,   110,   111,   112,   113,
-   114,   115,   116,   117,   118,   119,   120,   121,   122,   125,
-   127,   130,   132,   133,   136,   138,   141,   143,   146,   148,
-   151,   153,   156,   157,   158,   159,   162,   163,   166,   169,
-   170,   173,   174,   175,   178,   179,   182,   183,   186,   187,
-   190,   191
+    87,    92,    94,    95,    96,    97,    98,    99,   100,   101,
+   102,   103,   104,   105,   106,   107,   108,   109,   110,   111,
+   112,   113,   114,   115,   116,   117,   118,   119,   120,   123,
+   125,   128,   130,   131,   134,   136,   139,   141,   144,   146,
+   149,   151,   154,   155,   156,   157,   160,   161,   164,   167,
+   168,   171,   172,   173,   176,   177,   180,   181,   184,   185,
+   188,   189
 };
 #endif
 
@@ -800,253 +800,251 @@ yyreduce:
 case 1:
 #line 88 "frame.y"
 { 
-		logRunningInfo("Parse Exp Begin");
 		root = yyvsp[0].exp;
-		logRunningInfo("Parse Exp End");
 	;
     break;}
 case 2:
-#line 95 "frame.y"
+#line 93 "frame.y"
 { yyval.exp = A_StringExp(EM_tokPos,yyval.sval); ;
     break;}
 case 3:
-#line 96 "frame.y"
+#line 94 "frame.y"
 { yyval.exp = A_IntExp(EM_tokPos,yylval.ival); ;
     break;}
 case 4:
-#line 97 "frame.y"
+#line 95 "frame.y"
 {yyval.exp = A_NilExp(EM_tokPos);;
     break;}
 case 5:
-#line 98 "frame.y"
+#line 96 "frame.y"
 { yyval.exp = A_VarExp(EM_tokPos,yyvsp[0].var); ;
     break;}
 case 6:
-#line 99 "frame.y"
+#line 97 "frame.y"
 {yyval.exp = A_OpExp(EM_tokPos,A_minusOp,A_IntExp(EM_tokPos,0),yyvsp[0].exp);;
     break;}
 case 7:
-#line 100 "frame.y"
+#line 98 "frame.y"
 { yyval.exp = A_OpExp(EM_tokPos,A_timesOp,yyvsp[-2].exp,yyvsp[0].exp);;
     break;}
 case 8:
-#line 101 "frame.y"
+#line 99 "frame.y"
 { yyval.exp = A_OpExp(EM_tokPos,A_divideOp,yyvsp[-2].exp,yyvsp[0].exp);;
     break;}
 case 9:
-#line 102 "frame.y"
+#line 100 "frame.y"
 { yyval.exp = A_OpExp(EM_tokPos,A_plusOp,yyvsp[-2].exp,yyvsp[0].exp); ;
     break;}
 case 10:
-#line 103 "frame.y"
+#line 101 "frame.y"
 { yyval.exp = A_OpExp(EM_tokPos, A_minusOp,yyvsp[-2].exp,yyvsp[0].exp);;
     break;}
 case 11:
-#line 104 "frame.y"
+#line 102 "frame.y"
 { yyval.exp = A_OpExp(EM_tokPos,A_eqOp,yyvsp[-2].exp,yyvsp[0].exp);;
     break;}
 case 12:
-#line 105 "frame.y"
+#line 103 "frame.y"
 { yyval.exp = A_OpExp(EM_tokPos,A_neqOp,yyvsp[-2].exp,yyvsp[0].exp);;
     break;}
 case 13:
-#line 106 "frame.y"
+#line 104 "frame.y"
 { yyval.exp = A_OpExp(EM_tokPos,A_ltOp,yyvsp[-2].exp,yyvsp[0].exp);;
     break;}
 case 14:
-#line 107 "frame.y"
+#line 105 "frame.y"
 { yyval.exp = A_OpExp(EM_tokPos,A_leOp,yyvsp[-2].exp,yyvsp[0].exp);;
     break;}
 case 15:
-#line 108 "frame.y"
+#line 106 "frame.y"
 { yyval.exp = A_OpExp(EM_tokPos,A_gtOp,yyvsp[-2].exp,yyvsp[0].exp);;
     break;}
 case 16:
-#line 109 "frame.y"
+#line 107 "frame.y"
 { yyval.exp = A_OpExp(EM_tokPos,A_geOp,yyvsp[-2].exp,yyvsp[0].exp);;
     break;}
 case 17:
-#line 110 "frame.y"
+#line 108 "frame.y"
 {yyval.exp = A_IfExp(EM_tokPos,yyvsp[-2].exp,yyvsp[0].exp,A_IntExp(EM_tokPos,0));;
     break;}
 case 18:
-#line 111 "frame.y"
+#line 109 "frame.y"
 { yyval.exp = A_IfExp(EM_tokPos,yyvsp[-2].exp,A_IntExp(EM_tokPos,1),yyvsp[0].exp);;
     break;}
 case 19:
-#line 112 "frame.y"
+#line 110 "frame.y"
 {yyval.exp = A_AssignExp(EM_tokPos,yyvsp[-2].var,yyvsp[0].exp);;
     break;}
 case 20:
-#line 113 "frame.y"
+#line 111 "frame.y"
 { yyval.exp = A_CallExp(EM_tokPos,yyvsp[-3].sym,yyvsp[-1].explist);;
     break;}
 case 21:
-#line 114 "frame.y"
+#line 112 "frame.y"
 { yyval.exp = A_SeqExp(EM_tokPos,yyvsp[-1].explist); ;
     break;}
 case 22:
-#line 115 "frame.y"
+#line 113 "frame.y"
 {yyval.exp = A_RecordExp(EM_tokPos,yyvsp[-3].sym,yyvsp[-1].e_list);;
     break;}
 case 23:
-#line 116 "frame.y"
+#line 114 "frame.y"
 { yyval.exp = A_ArrayExp(EM_tokPos,yyvsp[-5].sym,yyvsp[-3].exp,yyvsp[0].exp);;
     break;}
 case 24:
-#line 117 "frame.y"
+#line 115 "frame.y"
 {yyval.exp = A_IfExp(EM_tokPos,yyvsp[-2].exp,yyvsp[0].exp,A_NilExp(EM_tokPos));;
     break;}
 case 25:
-#line 118 "frame.y"
+#line 116 "frame.y"
 {yyval.exp = A_IfExp(EM_tokPos,yyvsp[-4].exp,yyvsp[-2].exp,yyvsp[0].exp);;
     break;}
 case 26:
-#line 119 "frame.y"
+#line 117 "frame.y"
 { yyval.exp = A_WhileExp(EM_tokPos,yyvsp[-2].exp,yyvsp[0].exp);;
     break;}
 case 27:
-#line 120 "frame.y"
+#line 118 "frame.y"
 {yyval.exp = A_ForExp(EM_tokPos,yyvsp[-6].sym,yyvsp[-4].exp,yyvsp[-2].exp,yyvsp[0].exp);;
     break;}
 case 28:
-#line 121 "frame.y"
+#line 119 "frame.y"
 {yyval.exp=A_BreakExp(EM_tokPos);;
     break;}
 case 29:
-#line 122 "frame.y"
+#line 120 "frame.y"
 { yyval.exp = A_LetExp(EM_tokPos,yyvsp[-3].dec_List,A_SeqExp(EM_tokPos,yyvsp[-1].explist));;
     break;}
 case 30:
-#line 125 "frame.y"
+#line 123 "frame.y"
 {yyval.sym = S_Symbol(yyvsp[0].sval);;
     break;}
 case 31:
-#line 127 "frame.y"
+#line 125 "frame.y"
 { LVALUE_ACTION(yyval.var,yyvsp[0].var,A_SimpleVar(EM_tokPos,yyvsp[-1].sym));;
     break;}
 case 32:
-#line 131 "frame.y"
+#line 129 "frame.y"
 { yyval.var = NULL; ;
     break;}
 case 33:
-#line 132 "frame.y"
+#line 130 "frame.y"
 { LVALUE_ACTION(yyval.var, yyvsp[0].var, A_FieldVar(EM_tokPos, NULL, yyvsp[-1].sym)); ;
     break;}
 case 34:
-#line 133 "frame.y"
+#line 131 "frame.y"
 { LVALUE_ACTION(yyval.var, yyvsp[0].var, A_SubscriptVar(EM_tokPos, NULL, yyvsp[-2].exp)); ;
     break;}
 case 35:
-#line 137 "frame.y"
+#line 135 "frame.y"
 { yyval.explist = NULL; ;
     break;}
 case 36:
-#line 138 "frame.y"
+#line 136 "frame.y"
 { yyval.explist = A_ExpList(yyvsp[0].explist->head,yyvsp[0].explist->tail);;
     break;}
 case 37:
-#line 142 "frame.y"
+#line 140 "frame.y"
 { yyval.explist = A_ExpList(yyvsp[0].exp,NULL);;
     break;}
 case 38:
-#line 143 "frame.y"
+#line 141 "frame.y"
 { yyval.explist = A_ExpList(yyvsp[-2].exp,yyvsp[0].explist);;
     break;}
 case 39:
-#line 147 "frame.y"
+#line 145 "frame.y"
 { yyval.explist = NULL; ;
     break;}
 case 40:
-#line 148 "frame.y"
+#line 146 "frame.y"
 { yyval.explist = A_ExpList(yyvsp[0].explist->head,yyvsp[0].explist->tail);;
     break;}
 case 41:
-#line 152 "frame.y"
+#line 150 "frame.y"
 { yyval.explist = A_ExpList(yyvsp[0].exp,NULL);;
     break;}
 case 42:
-#line 153 "frame.y"
+#line 151 "frame.y"
 { yyval.explist = A_ExpList(yyvsp[-2].exp,yyvsp[0].explist);;
     break;}
 case 43:
-#line 156 "frame.y"
+#line 154 "frame.y"
 { yyval.dec_List = NULL; ;
     break;}
 case 44:
-#line 157 "frame.y"
+#line 155 "frame.y"
 { yyval.dec_List = A_DecList(A_TypeDec(EM_tokPos, A_NametyList(yyvsp[-1].name_type,NULL)),yyvsp[0].dec_List); ;
     break;}
 case 45:
-#line 158 "frame.y"
+#line 156 "frame.y"
 { yyval.dec_List =   A_DecList(yyvsp[-1].decl,yyvsp[0].dec_List); ;
     break;}
 case 46:
-#line 159 "frame.y"
+#line 157 "frame.y"
 { yyval.dec_List =  A_DecList(A_FunctionDec(EM_tokPos, yyvsp[-1].fdeclist),yyvsp[0].dec_List); ;
     break;}
 case 47:
-#line 162 "frame.y"
+#line 160 "frame.y"
 { yyval.decl = A_VarDec(EM_tokPos, yyvsp[-2].sym, NULL, yyvsp[0].exp); ;
     break;}
 case 48:
-#line 163 "frame.y"
+#line 161 "frame.y"
 {yyval.decl = A_VarDec(EM_tokPos, yyvsp[-4].sym, yyvsp[-2].sym, yyvsp[0].exp); ;
     break;}
 case 49:
-#line 166 "frame.y"
+#line 164 "frame.y"
 { yyval.name_type = A_Namety(yyvsp[-2].sym, yyvsp[0].type_p); ;
     break;}
 case 50:
-#line 169 "frame.y"
+#line 167 "frame.y"
 { yyval.fdeclist = A_FundecList(A_Fundec(EM_tokPos, yyvsp[-5].sym, yyvsp[-3].flist, NULL, yyvsp[0].exp),NULL); ;
     break;}
 case 51:
-#line 170 "frame.y"
+#line 168 "frame.y"
 { yyval.fdeclist = A_FundecList(A_Fundec(EM_tokPos, yyvsp[-7].sym, yyvsp[-5].flist, yyvsp[-2].sym, yyvsp[0].exp),NULL); ;
     break;}
 case 52:
-#line 173 "frame.y"
+#line 171 "frame.y"
 { yyval.type_p = A_NameTy(EM_tokPos, yyvsp[0].sym); ;
     break;}
 case 53:
-#line 174 "frame.y"
+#line 172 "frame.y"
 { yyval.type_p = A_RecordTy(EM_tokPos, yyvsp[-1].flist); ;
     break;}
 case 54:
-#line 175 "frame.y"
+#line 173 "frame.y"
 { yyval.type_p = A_ArrayTy(EM_tokPos, yyvsp[0].sym); ;
     break;}
 case 55:
-#line 178 "frame.y"
+#line 176 "frame.y"
 { yyval.flist = NULL; ;
     break;}
 case 56:
-#line 179 "frame.y"
+#line 177 "frame.y"
 {yyval.flist = A_FieldList(yyvsp[0].flist->head,yyvsp[0].flist->tail);;
     break;}
 case 57:
-#line 182 "frame.y"
+#line 180 "frame.y"
 { yyval.flist = A_FieldList(A_Field(EM_tokPos,yyvsp[-2].sym,yyvsp[0].sym),NULL);;
     break;}
 case 58:
-#line 183 "frame.y"
+#line 181 "frame.y"
 { yyval.flist = A_FieldList(A_Field(EM_tokPos,yyvsp[-4].sym,yyvsp[-2].sym),yyvsp[0].flist);;
     break;}
 case 59:
-#line 186 "frame.y"
+#line 184 "frame.y"
 {yyval.e_list = NULL;;
     break;}
 case 60:
-#line 187 "frame.y"
+#line 185 "frame.y"
 { yyval.e_list = A_EfieldList(yyvsp[0].e_list->head,yyvsp[0].e_list->tail);;
     break;}
 case 61:
-#line 190 "frame.y"
+#line 188 "frame.y"
 { yyval.e_list = A_EfieldList(A_Efield(yyvsp[-2].sym,yyvsp[0].exp),NULL);;
     break;}
 case 62:
-#line 191 "frame.y"
+#line 189 "frame.y"
 { yyval.e_list = A_EfieldList(A_Efield(yyvsp[-4].sym,yyvsp[-2].exp),yyvsp[0].e_list);;
     break;}
 }
@@ -1244,7 +1242,7 @@ yyerrhandle:
   yystate = yyn;
   goto yynewstate;
 }
-#line 194 "frame.y"
+#line 192 "frame.y"
 
 yyerror(char *s){
 	return 0;

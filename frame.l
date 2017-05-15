@@ -79,6 +79,6 @@ while   { adjust(); return WHILE;}
 	return INTT; 
 }
 
-. { logRunningInfo(yytext); }
+. { /*Log("Lex analyse","Unknown token:%s",yytext);*/ EM_error(EM_tokPos,"Unknown token:%s",yytext); }
 
 %%
