@@ -55,8 +55,6 @@ struct A_exp_{
 		struct {S_symbol var; A_exp lo,hi,body; bool escape;} forr;
 		/* breakk; - need only the pos */
 		struct {A_decList decs; A_exp body;} let; 
-		/* TODO the upper one is better than the lower one please change! */
-		/* struct { A_exp body; } let; */ 
 		struct {S_symbol typ; A_exp size, init;} array;
 	} u;
 };
