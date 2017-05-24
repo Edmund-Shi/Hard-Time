@@ -86,7 +86,9 @@
 
 ProgramRoot:
 	exp { 
+		Log("Parser","Begin");
 		root = $1;
+		Log("Parser","End");
 	}
 	;
 exp:
