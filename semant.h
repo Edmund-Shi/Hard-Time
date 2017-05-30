@@ -3,11 +3,31 @@
 #include "types.h"
 #include "symbol.h"
 #include "absyn.h"
+#include "translate.h"
 
-/* TODO change the following line after chapter 8 IR code */
-typedef void* Tr_exp; /* in order to be easier at the moment */ 
+typedef struct E_enventry_ *E_enventry;
+struct E_enventry_ {
+	enum { E_varEntry, E_funEntry }kind ;
+	union {
+		struct {
+			Tr_access access;
+			Ty_ty ty;
+		}var;
+		struct {
+			Tr_level level;
+			Temp_label label;
+			Ty_tyList formals;
+			Ty_ty result;
+		} fun;
+	}u;
+};
 
-void SEM_transProg(A_exp exp);
+// 初始化构造函数
+E_enventry E_VarEntry(Tr_access access, Ty_ty ty);
+E_enventry E_FunEntry(Tr_level level, Temp_label label, Ty_tyList formals, Ty_ty result);
+
+
+struct expty SEM_transProg(A_exp exp);
 
 // The following functions only available to semant.c file
 //struct expty transVar(S_table venv, S_table tenv, A_var v);

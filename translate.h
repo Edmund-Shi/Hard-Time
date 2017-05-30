@@ -30,6 +30,10 @@ struct Cx {
 };
 
 typedef struct Tr_access_ *Tr_access;
+struct Tr_access_ {
+
+};
+
 typedef struct Tr_accessList_ *Tr_accessList;
 struct Tr_accessList {
 	Tr_access head;
@@ -42,6 +46,9 @@ struct Tr_level_ {
 	F_frame frame;
 	int depth; // call stack depth
 };
+
+Tr_level Tr_outermost(void);
+Tr_level Tr_newLevel(Tr_level parent, Temp_label name, U_boolList formals);
 
 //Tranlation for expressions
 Tr_exp Tr_nilExp();

@@ -13,7 +13,7 @@ void transDec(S_table venv, S_table tenv, A_dec d);
 Ty_ty transTy(S_table tenv, A_ty a);
 
 
-
+// IR tree with type check 
 struct expty {
 	Tr_exp exp;
 	Ty_ty ty;
@@ -26,11 +26,29 @@ struct expty expTy(Tr_exp exp, Ty_ty ty) {
 	return e;
 }
 
-void SEM_transProg(A_exp exp){
+// global dummy node
+static struct expty *dummy_expty_p;
 
-
+void init() {
+	dummy_expty_p = (struct expty*) checked_malloc(sizeof(struct expty));
+	dummy_expty_p->exp = Tr_voidExp();
+	dummy_expty_p->ty = Ty_Void();
 }
-struct expty transExp(S_table venv, S_table tenv, A_exp a){
+
+struct expty SEM_transProg(A_exp exp){
+	init();
+
+	// #TODO finish venv and tenv after add local function
+	S_table venv = S_empty();
+	S_table tenv = S_empty();
+
+	Tr_level mainlevel = Tr_newLevel(Tr_outermost(), Temp_namedlabel("main"), NULL);
+	struct expty result = transExp(mainlevel, venv, tenv, exp);
+	
+	// #TODO print IR tree
+	return result;
+}
+struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 	switch (a -> kind){
 		case A_intExp:{
 			return expTy(a->u.intt, Ty_Int());
@@ -41,9 +59,9 @@ struct expty transExp(S_table venv, S_table tenv, A_exp a){
 			S_beginScope(venv);
 			S_beginScope(tenv);
 			for(d = a -> u.let.decs; d; d=d->tail){
-				transDec(venv, tenv, d->head);
+				transDec(level,venv, tenv, d->head);
 			}
-			exp = transExp(venv,tenv,a->u.let.body);
+			exp = transExp(level,venv,tenv,a->u.let.body);
 			S_endScope(tenv);
 			S_endScope(venv);
 			return exp;
@@ -56,7 +74,7 @@ struct expty transExp(S_table venv, S_table tenv, A_exp a){
 
 	assert(0);
 }
-struct expty transVar(S_table venv, S_table tenv, A_var v){
+struct expty transVar(Tr_level level, S_table venv, S_table tenv, A_var v){
 	switch(v->kind){
 		case A_simpleVar:{
 			// #TODO add variable
@@ -66,10 +84,10 @@ struct expty transVar(S_table venv, S_table tenv, A_var v){
 
 }
 
-void transDec(S_table venv, S_table tenv, A_dec d) {
+void transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
 	switch (d->kind){
 	case A_varDec: {
-		struct expty e = transExp(venv, tenv, d->u.var.init);
+		struct expty e = transExp(level,venv, tenv, d->u.var.init);
 		// #TODO Unknow function
 		// S_enter(venv, d->u.var.var, E_VarEntry(e.ty));
 		// The following version is simplified
