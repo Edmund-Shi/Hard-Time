@@ -68,6 +68,7 @@ S_table E_base_tenv();
 S_table E_base_venv();
 
 // IR tree with type check 
+
 struct expty {
 	Tr_exp exp;
 	Ty_ty ty;
@@ -538,6 +539,7 @@ struct expty transVar(Tr_level level, S_table venv, S_table tenv, A_var v){
 			//3) Get the type of array's element
 			return expTy(te, actual_ty(exp.ty->u.array));
 		}
+
 	}
 
 }
