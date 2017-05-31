@@ -18,7 +18,7 @@ int main(void){
 	ClearLog();
 	openLog(); /*open log at the beginnig and colse it before exit*/
 	yyparse();
-	//SEM_transProg(root);
+	SEM_transProg(root);
 
 	pr_exp(absynTree, root, 0);
 	fclose(absynTree);

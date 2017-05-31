@@ -1,6 +1,6 @@
 #include "frame.h"
 #include "errormsg.h"
-
+#include <stdio.h>
 const int F_wordSize=4;
 
 static Temp_temp fp = NULL;
@@ -166,7 +166,7 @@ F_accessList F_formals(F_frame f) {
 	return f->formals;
 }
 
-F_access F_allocLoacl(F_frame f, bool escape){
+F_access F_allocLocal(F_frame f, bool escape){
 	F_access access;
 	if (escape)
 	{
@@ -200,7 +200,7 @@ F_frag F_ProcFrag(T_stm body, F_frame frame) {
 
 
 F_fragList F_FragList(F_frag head, F_fragList tail) {
-	F_fragList temp;
+	F_fragList temp = (F_fragList)checked_malloc(sizeof(struct F_fragList_));
 	temp->head = head;
 	temp->tail = tail;
 	return temp;
@@ -216,7 +216,34 @@ F_fragList F_getFragList(void) {
 	return fragList_head;
 }
 */
+static F_fragList *fragList = NULL;
+static F_fragList fragList_head = NULL;
+static F_frag* extendFragList() {
+	if (fragList == NULL) {
+		fragList = (F_fragList*)checked_malloc(sizeof(F_fragList*));
+	}
 
+	*fragList = (F_fragList)checked_malloc(sizeof(struct F_fragList_));
+
+	if (fragList_head == NULL) {
+		//Remember the head of frag list
+		fragList_head = *fragList;
+	}
+	F_frag *currentFrag = &((*fragList)->head);
+	fragList = &((*fragList)->tail);
+	*fragList = NULL;
+
+	return currentFrag;
+}
+void F_String(Temp_label label, string str) {
+	F_frag *currentFrag = extendFragList();
+	*currentFrag = F_StringFrag(label, str);
+}
+void F_Proc(T_stm body, F_frame frame) {
+	F_frag *currentFrag = extendFragList();
+	*currentFrag = F_ProcFrag(body, frame);
+	//printf("New proc added to frag list\n");fflush(stdout);
+}
 T_exp F_Exp(F_access acc, T_exp framePtr){
 	if (acc->kind == inFrame){
 		return T_Mem(T_Binop(T_plus, framePtr, T_Const(acc->u.offset)));

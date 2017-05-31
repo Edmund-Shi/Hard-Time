@@ -1,5 +1,19 @@
+#include <stdio.h>
 #include "translate.h"
 #include "tree.h"
+#include "frame.h"
+
+static stack_node loop_label_list = NULL;
+
+static void LL_push(Temp_label label) {
+	GS_push(&loop_label_list, label);
+}
+static void LL_pop() {
+	GS_pop(&loop_label_list);
+}
+static Temp_label LL_peek() {
+	return GS_peek(&loop_label_list);
+}
 
 //functions to translate tree into tr_exp
 //only available in c file
@@ -10,6 +24,13 @@ static T_exp unEx(Tr_exp e);
 static T_stm unNx(Tr_exp e);
 static struct Cx unCx(Tr_exp e);
 
+void doPatch(patchList list, Temp_label label) {
+	Temp_label *tmp;
+	for (; list != NULL; list = list->tail) {
+		tmp = list->head;
+		if (tmp != NULL)*tmp = label;
+	}
+}
 
 static Tr_level outermostLevel = NULL;
 Tr_level Tr_outermost() {
@@ -32,7 +53,7 @@ static Tr_exp Tr_Ex(T_exp ex) {
 static Tr_exp Tr_Nx(T_stm nx) {
 	Tr_exp p = (Tr_exp)checked_malloc(sizeof *p);
 	p->kind = Tr_nx;
-	p->u.ex = nx;
+	p->u.nx = nx;
 	return p;
 }
 static Tr_exp Tr_Cx(patchList trues, patchList falses, T_stm stm) {
@@ -53,7 +74,7 @@ static T_exp unEx(Tr_exp e) {
 		doPatch(e->u.cx.trues, t);
 		doPatch(e->u.cx.falses, f);
 		return T_Eseq(T_Move(T_Temp(r), T_Const(1)),
-			T_Esq(e->u.cx.stm,
+			T_Eseq(e->u.cx.stm,
 				T_Eseq(T_Label(f),
 					T_Eseq(T_Move(T_Temp(r), T_Const(0)),
 						T_Eseq(T_Label(t),
@@ -63,12 +84,11 @@ static T_exp unEx(Tr_exp e) {
 		return T_Eseq(e->u.nx, T_Const(0));
 	}
 	//# 错误处理
-	assert(0);
+	//assert(0);
 	}
 }
 static T_stm unNx(Tr_exp e) {
 	Temp_label t, f;
-	T_stm st;
 	switch (e->kind) {
 	case Tr_nx: {
 		return e->u.nx;
@@ -116,11 +136,48 @@ static patchList PatchList(Temp_label *head, patchList tail) {
 	return p;
 }
 
+Tr_level Tr_newLevel(Tr_level parent, Temp_label name, U_boolList formals) {
+	Tr_level level = (Tr_level)checked_malloc(sizeof(*level));
+	level->parent = parent;
+	level->frame = F_newFrame(name, U_BoolList(TRUE, formals));
+	level->depth = parent->depth + 1;
+	return level;
+}
+Tr_accessList Tr_formals(Tr_level level) {
+	Tr_accessList accList = NULL, accList_head = NULL;
+	F_accessList faccList = F_formals(level->frame);
+
+	for (; faccList != NULL; faccList = faccList->tail) {
+		if (accList_head == NULL) {
+			accList = (Tr_accessList)checked_malloc(sizeof(*accList));
+			accList_head = accList;
+		}
+		else {
+			accList->tail = (Tr_accessList)checked_malloc(sizeof(*(accList->tail)));
+			accList = accList->tail;
+		}
+		accList->head = (Tr_access)checked_malloc(sizeof(struct Tr_access_));
+		accList->head->level = level;
+		accList->head->access = faccList->head;
+	}
+	if (accList != NULL) {
+		accList->tail = NULL;
+	}
+	return accList_head;
+}
+Tr_access Tr_allocLocal(Tr_level level, bool escape) {
+	F_access acc = F_allocLocal(level->frame, escape);
+	Tr_access tracc = (Tr_access)checked_malloc(sizeof(*tracc));
+	tracc->access = acc;
+	tracc->level = level;
+	return tracc;
+}
+
+
 Tr_exp Tr_simpleVar(Tr_access _ac, Tr_level _le) {
 	F_access access = _ac->access;
 	T_exp exp;
 	if (_le != _ac->level) {
-		int count;
 		exp = F_Exp(F_staticLink(), T_Temp(F_FP()));
 		_le = _le->parent;
 		while (_le != _ac->level) {
@@ -185,19 +242,20 @@ Tr_exp Tr_stringExp(string str_val) {
 	return Tr_Ex(T_Name(t1));
 }
 Tr_exp Tr_arithExp(A_oper oper, Tr_exp left, Tr_exp right) {
-	T_exp exp;
 	switch (oper) {
 	case A_plusOp:
-		return T_Binop(T_plus, unEx(left), unEx(right));
+		return Tr_Ex(T_Binop(T_plus, unEx(left), unEx(right)));
 	case A_minusOp:
-		return T_Binop(T_minus, unEx(left), unEx(right));
+		return Tr_Ex(T_Binop(T_minus, unEx(left), unEx(right)));
 	case A_timesOp:
-		return T_Binop(T_mul, unEx(left), unEx(right));
+		return Tr_Ex(T_Binop(T_mul, unEx(left), unEx(right)));
 	case A_divideOp:
-		return T_Binop(T_div, unEx(left), unEx(right));
+		return Tr_Ex(T_Binop(T_div, unEx(left), unEx(right)));
 	//# 错误处理
-		Assert(0);
+	//Assert(0);
 	}
+	printf("Error in translate.c function Tr_arithExp!");
+	exit(1);
 }
 Tr_exp Tr_voidExp(void) {
 	return Tr_Ex(T_Const(0));
@@ -232,7 +290,7 @@ Tr_exp Tr_seqExp(Tr_exp* array, int size) {
 	int i = 0;
 	int last = size - 1;
 	while (i<size) {
-		Tr_printTrExp(array[i]);
+		//Tr_printTrExp(array[i]);
 		if (i != last) *pex = T_Eseq(unNx(array[i]), NULL);
 		else *pex = unEx(array[i]);
 		if (i == 0) ex_head = *pex;
@@ -255,7 +313,7 @@ Tr_exp Tr_logicExp(A_oper oper, Tr_exp left, Tr_exp right, bool isStrCompare) {
 			stm = T_Cjump(T_eq, call, T_Const(0), NULL, NULL);
 			break;
 		//# 错误处理
-		Assert(0);
+		//Assert(0);
 		}
 	}
 	else {
@@ -279,7 +337,7 @@ Tr_exp Tr_logicExp(A_oper oper, Tr_exp left, Tr_exp right, bool isStrCompare) {
 			stm = T_Cjump(T_ge, unEx(left), unEx(right), NULL, NULL);
 			break;
 		//# 错误处理
-		Assert(0);
+		//Assert(0);
 		}
 	}
 	tl = PatchList(&stm->u.CJUMP.true, NULL);
@@ -322,26 +380,108 @@ Tr_exp Tr_callExp(Tr_level caller_lvl, Tr_level callee_lvl, Temp_label fun_label
 	T_exp exp = T_Call(T_Name(fun_label), listp_head);
 	return Tr_Ex(exp);
 }
-Tr_exp Tr_whileExp(Tr_exp test, Tr_exp body, Tr_exp done) {
-	Temp_label testl = Temp_newlabel(), bodyl = Temp_newlabel();
-	return Tr_Ex(T_Eseq(T_Jump(T_Name(testl), Temp_LabelList(testl, NULL)),
-		T_Eseq(T_Label(bodyl),
-			T_Eseq(unNx(body),
-				T_Eseq(T_Label(testl),
-					T_Eseq(T_Cjump(T_eq, unEx(test), T_Const(0), unEx(done)->u.NAME, bodyl),
-						T_Eseq(T_Label(unEx(done)->u.NAME), T_Const(0))))))));
+Tr_exp Tr_whileExp(Tr_exp cond, Tr_exp body) {
+	T_stm st;
+	struct Cx cx_cond = unCx(cond);
+
+	Temp_label t = Temp_newlabel();
+	Temp_label f = LL_peek();//Get done label from the list, which should have been prepared before this function is called.
+	Temp_label start = Temp_newlabel();
+
+	doPatch(cx_cond.trues, t);
+	doPatch(cx_cond.falses, f);
+
+	/*
+	T_Label  start
+	cx_cond.stm (true->t, false->f)
+	T_Label(t)
+	body
+	T_Jump	 start
+	T_Label(f)
+	*/
+	st = T_Seq(T_Label(start),
+		T_Seq(cx_cond.stm,
+			T_Seq(T_Label(t),
+				T_Seq(unNx(body),
+					T_Seq(
+						T_Jump(
+							T_Name(start),
+							Temp_LabelList(start, NULL)
+							),
+						T_Label(f)
+						)
+					)
+				)
+			)
+		);
+
+	//Pop the label as it's no longer used
+	LL_pop();
+
+	return Tr_Nx(st);
 }
-Tr_exp Tr_breakExp(Tr_exp b) { return Tr_Nx(T_Jump(T_Name(unEx(b)->u.NAME), Temp_LabelList(unEx(b)->u.NAME, NULL))); }
+Tr_exp Tr_forExp(Tr_exp var, Tr_exp low, Tr_exp high, Tr_exp body) {
+
+	T_stm st;
+	T_exp v = unEx(var);
+	Temp_label t = Temp_newlabel();
+	Temp_label f = LL_peek();//Get done label from the list, which should have been prepared before this function is called.
+	Temp_label start = Temp_newlabel();
+
+	T_stm cond = T_Cjump(T_le, v, unEx(high), t, f);
+
+	/*
+	T_Move   var <- low
+	T_Label  start
+	T_CJump	 var <= high, t, f
+	T_Label(t)
+	body
+	T_Move   var + 1
+	T_Jump	 start
+	T_Label(f)
+	*/
+	st = T_Seq(T_Move(v, unEx(low)),
+		T_Seq(T_Label(start),
+			T_Seq(cond,
+				T_Seq(T_Label(t),
+					T_Seq(unNx(body),
+						T_Seq(T_Move(v, T_Binop(T_plus, v, T_Const(1))),
+							T_Seq(
+								T_Jump(
+									T_Name(start),
+									Temp_LabelList(start, NULL)
+									),
+								T_Label(f)
+								)
+							)
+						)
+					)
+				)
+			)
+		);
+
+	//Pop the label as it's no longer used
+	LL_pop();
+
+	return Tr_Nx(st);
+}
+Tr_exp Tr_breakExp() {
+	//Get done label from the list, which should have been prepared before this function is called.
+	Temp_label f = LL_peek();
+	T_stm st =
+		T_Jump(
+			T_Name(f),
+			Temp_LabelList(f, NULL)
+			);
+
+	return Tr_Nx(st);
+}
 void Tr_genLoopDoneLabel() {
-	return Tr_Ex(T_Name(Temp_newlabel()));
+	Temp_label f = Temp_newlabel();
+	LL_push(f);
+	//return Tr_Ex(T_Name(Temp_newlabel()));
 }
 Tr_exp Tr_fieldVar(Tr_exp base, int field_offset) {
 	return Tr_Ex(T_Mem(T_Binop(T_plus, unEx(base), T_Const(field_offset * F_wordSize))));
 }
-//## 还没有实现
-/*
-Tr_exp forExp(Tr_exp var, Tr_exp low, Tr_exp high, Tr_exp body) {
-Tr_exp test = (Tr_exp)checked_malloc(sizeof *test);
-}
-*/
 

@@ -72,3 +72,7 @@ void S_endScope(S_table t)
 void S_dump(S_table t, void (*show)(S_symbol sym, void *binding)) {
 	TAB_dump(t, (void (*)(void *, void *)) show);
 }
+
+void *S_look(S_table t, S_symbol sym) {
+	return TAB_look(t, sym);
+}

@@ -32,4 +32,16 @@ U_boolList U_BoolList(bool head, U_boolList tail);
 //#define TRUE 1
 //#define FALSE 0
 
+/* Stack Structure Declaration Begin */
+typedef struct stack_node_ *stack_node;
+struct stack_node_ {
+	void *key;
+	stack_node last;
+};
+void GS_push(stack_node *plist, void *key);
+void GS_pop(stack_node *plist);
+void GS_empty(stack_node *plist);
+void *GS_peek(stack_node *plist);
+bool GS_check(stack_node list, void* key, bool (*compare)(void*, void*));
+//Stack Structure Declaration End
 #endif

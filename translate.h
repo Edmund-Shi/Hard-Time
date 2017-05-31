@@ -1,9 +1,22 @@
 #ifndef TRANSLATE_H_
 #define TRANSLATE_H_
+#include "util.h"
 #include "tree.h"
 #include "temp.h"
 #include "frame.h"
 #include "absyn.h" // for A_oper
+
+typedef struct patchList_ *patchList;
+struct patchList_ {
+	Temp_label *head;
+	patchList tail;
+};
+static patchList PatchList(Temp_label *head, patchList tail);
+
+struct Cx {
+	patchList trues, falses;
+	T_stm stm;
+};
 
 typedef struct Tr_exp_ *Tr_exp;
 struct Tr_exp_ {
@@ -15,45 +28,11 @@ struct Tr_exp_ {
 	} u;
 };
 
-typedef struct patchList_ *patchList;
-struct patchList_ {
-	Temp_label *head;
-	patchList tail;
-};
-static patchList PatchList(Temp_label *head, patchList tail);
-
-
-// global stack operations
-typedef struct stack_node_ *stack_node;
-struct stack_node_ {
-	void *key;
-	stack_node next;
-};
-void GS_push(stack_node *plist, void *key);
-void GS_pop(stack_node *plist);
-void GS_empty(stack_node *plist);
-bool GS_check(stack_node list, void *key, bool(*compare)(void*, void*));
-void* GS_peek(stack_node *plist);
-
-struct Cx {
-	patchList trues;
-	patchList falses;
-	T_stm stm;
-};
-
 typedef struct Tr_access_ *Tr_access;
-struct Tr_access_ {
-
-};
-
 typedef struct Tr_accessList_ *Tr_accessList;
 
-struct Tr_access_ {
-	Tr_level level;
-	F_access access;
-};
-struct Tr_accessList {
 
+struct Tr_accessList_ {
 	Tr_access head;
 	Tr_accessList tail;
 };
@@ -64,8 +43,12 @@ struct Tr_level_ {
 	F_frame frame;
 	int depth; // call stack depth
 };
-
-
+struct Tr_access_ {
+	Tr_level level;
+	F_access access;
+};
+void Tr_genLoopDoneLabel();
+void doPatch(patchList list, Temp_label label);
 Tr_level Tr_outermost(void);
 Tr_level Tr_newLevel(Tr_level parent, Temp_label name, U_boolList formals);
 Tr_accessList Tr_formals(Tr_level level);
@@ -96,6 +79,7 @@ Tr_exp Tr_stringExp(string str_val);
 Tr_exp Tr_voidExp(void);
 Tr_exp Tr_whileExp(Tr_exp cond, Tr_exp body);
 Tr_exp Tr_breakExp();
+Tr_exp Tr_forExp(Tr_exp var, Tr_exp low, Tr_exp high, Tr_exp body);
 //Tranlation for expressions
 //Tr_exp Tr_forExp(Tr_exp var, Tr_exp low, Tr_exp high, Tr_exp body);
 

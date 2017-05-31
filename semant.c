@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "translate.h"
-
+#include "errormsg.h"
 // local function dec
 struct expty transVar(Tr_level level, S_table venv, S_table tenv, A_var v);
 struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a);
@@ -376,6 +376,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 			return expTy(Tr_whileExp(test_exp.exp, body_exp.exp), Ty_Void());
 		}
 		// 不应该出现For语句
+		/*
 		case A_forExp: {
 			break;
 			// 需要注意的是，for语句中可能会定义新的变量，需要新的环境
@@ -417,6 +418,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 			S_endScope(venv);
 			return expTy(Tr_forExp(var_exp.exp, for_bottom_exp.exp, for_upper_exp.exp, body_exp.exp), Ty_Void());
 		}
+		*/
 		case A_breakExp:{
 			if (VL_isEmpty()){
 				EM_error(a->pos, "BREAK only avialiable in loop structure.");
@@ -748,7 +750,7 @@ Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
 		for (functions = d->u.function; functions != NULL; functions = functions->tail) {
 			head = functions->head;
 			if (head != NULL) {
-				debug("  A_funDec translate body: %s", S_name(head->name));
+				//debug("  A_funDec translate body: %s", S_name(head->name));
 				//2.1) retrieve the formals of this E_FunEntry
 				entry = S_look(venv, head->name);
 				formalTys = entry->u.fun.formals;

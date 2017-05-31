@@ -48,7 +48,7 @@ struct F_frag_ {
 F_frag F_StringFrag(Temp_label label, string str);
 F_frag F_ProcFrag(T_stm body, F_frame frame);
 
-void F_String(Temp_label label, F_frame frame);
+void F_String(Temp_label label, string str);
 void F_Proc(T_stm body, F_frame frame);
 
 typedef struct F_fragList_ *F_fragList;
@@ -64,7 +64,7 @@ F_fragList F_getFragList(void);
 F_frame F_newFrame(Temp_label name, U_boolList formals);
 Temp_label F_name(F_frame f);
 F_accessList F_formals(F_frame f);
-F_access F_allocLocal(F_frame f, bool escape);
+F_access F_allocLocal(F_frame f, bool escape) ;
 F_access F_staticLink();
 
 //Registers
