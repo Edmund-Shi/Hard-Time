@@ -4,18 +4,9 @@
 #include "tree.h"
 #include "temp.h"
 
-// frame and access decs
-typedef struct F_frame_ *F_frame;
-struct F_frame_ {
-	F_accessList formals; //All of the vars stored in the frame
-	int locals;
-	int offset;
-	Temp_label begin_label; 
-};
-
 typedef struct F_access_ *F_access;
 struct F_access_ {
-	enum  	{ inFrame,inReg	} kind;
+	enum { inFrame, inReg } kind;
 	union {
 		int offset;
 		Temp_temp reg;
@@ -27,6 +18,18 @@ struct F_accessList_ {
 	F_access head;
 	F_accessList tail;
 };
+
+typedef struct F_frame_ *F_frame;
+struct F_frame_ {
+	F_accessList formals; //All of the vars stored in the frame
+	int locals;
+	int offset;
+	Temp_label begin_label;
+};
+
+
+
+
 
 typedef struct F_frag_ *F_frag;
 struct F_frag_ {
