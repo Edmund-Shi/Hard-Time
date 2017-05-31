@@ -9,11 +9,15 @@
 #include "translate.h"
 
 // local function dec
-struct expty transVar(S_table venv, S_table tenv, A_var v);
-struct expty transExp(S_table venv, S_table tenv, A_exp a);
-Tr_exp transDec(S_table venv, S_table tenv, A_dec d);
-Ty_ty transTy(S_table tenv, A_ty a);
+struct expty transVar(Tr_level level, S_table venv, S_table tenv, A_var v);
+struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a);
+Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d);
+Ty_ty transTy(S_table tenv, S_symbol sym, A_ty a);
 Ty_ty actual_ty(Ty_ty ty); // return the actual type of ty
+Ty_ty transTyHeader(A_ty a);
+bool isReferToOutside(bool* marked, int marked_len, S_symbol* syms, S_symbol refered);
+Ty_tyList makeFormalTyList(S_table tenv, A_fieldList params);
+void createEscapeList(U_boolList *formal_escs, A_fieldList fList);
 
 string TAG = "SEMANT module:";
 
@@ -60,6 +64,9 @@ static void SL_empty() {
 }
 /* Symbol list (for generic use) END */
 
+S_table E_base_tenv();
+S_table E_base_venv();
+
 // IR tree with type check 
 struct expty {
 	Tr_exp exp;
@@ -85,9 +92,8 @@ void init() {
 struct expty SEM_transProg(A_exp exp){
 	init();
 
-	// #TODO finish venv and tenv after add local function
-	S_table venv = S_empty();
-	S_table tenv = S_empty();
+	S_table venv = E_base_venv();
+	S_table tenv = E_base_tenv();
 
 	Tr_level mainlevel = Tr_newLevel(Tr_outermost(), Temp_namedlabel("main"), NULL);
 	struct expty result = transExp(mainlevel, venv, tenv, exp);
@@ -95,6 +101,9 @@ struct expty SEM_transProg(A_exp exp){
 	// #TODO print IR tree
 	return result;
 }
+#define EXACT_ARGS 0
+#define LESS_ARGS 1
+#define MORE_ARGS 2
 struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 	string TAG = "TRANSEXP";
 	if (a == NULL){
@@ -175,7 +184,88 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 			break;
 		}
 		case A_recordExp: {
-			// #TODO an unimplement case
+			Ty_ty ty;
+			Ty_fieldList tyfList;
+			int cnt;
+			A_efieldList eFields;
+			A_efield a_efield;
+			Ty_field tyField;
+			struct expty expty;
+			A_exp exp;
+			int arg_number;
+			ty = S_look(tenv, a->u.record.typ);
+			int i;
+			//1) Check if the record expression's leading ID is a declared record type
+			if (ty != NULL && ty->kind == Ty_record) {
+				//1) Calculate the number of fields
+				for (tyfList = ty->u.record, cnt = 0; tyfList != NULL; tyfList = tyfList->tail) {
+					if (tyfList->head != NULL) {
+						cnt++;
+					}
+				}
+				//debug("record fields in total: %d", cnt);
+				te = Tr_recordExp_new(cnt);
+
+				//2) Recursively check each field
+				
+				for (tyfList = ty->u.record, eFields = a->u.record.fields, i = 1;
+				tyfList != NULL && eFields != NULL;
+					tyfList = tyfList->tail, eFields = eFields->tail, i++) {
+					tyField = tyfList->head;
+					a_efield = eFields->head;
+					//debug("record field");
+					if (tyField != NULL && a_efield != NULL) {
+						//debug("record field init: %d", i);
+						//2.1) Check field name's consistency
+						if (tyField->name != a_efield->name) {
+							EM_error(a_efield->exp->pos,
+								"The field %d initialized for record '%s' is inconsistent with the declared field's name '%s'",
+								i, S_name(a->u.record.typ), S_name(tyField->name));
+						}
+						else {
+							//2.2) Check the compatibility between the declared field type and that of the initializer
+							expty = transExp(level, venv, tenv, a_efield->exp);
+							if ( expty.ty != tyField->ty) {
+								EM_error( exp->pos,
+									"Type of field %d initialized for record '%s' is incompatible with the declared type",
+									i, S_name(a->u.record.typ));
+							}
+							//2.3) Append the field initialization to the IR
+							//debug("             type: %s", z_str_ty[expty.ty->kind]);
+							Tr_recordExp_app(te, expty.exp, i == cnt ? TRUE : FALSE);//Initialize next field
+						}
+					}
+					else {
+						//In case one list is run out, but the other not, an error occurs.
+						if (a_efield == NULL && tyField != NULL) {
+							arg_number = LESS_ARGS;
+							break;
+						}
+						else if (a_efield != NULL && tyField == NULL) {
+							arg_number = MORE_ARGS;
+							break;
+						}
+					}
+				}
+
+				if (arg_number == MORE_ARGS) {
+					EM_error(a->pos,
+						"More than necessary fields are initialized for record '%s'", S_name(a->u.record.typ));
+				}
+				else if (arg_number == LESS_ARGS || (tyfList != NULL && tyfList->head != NULL)) {
+					EM_error( a->pos,
+						"Less than necessary fields are initialized for record '%s'", S_name(a->u.record.typ));
+				}
+
+				//Terminate in case of any error
+		
+
+				//3) Return the result
+				return expTy(te, ty);
+			}
+			else {
+				EM_error( a->pos, "Undefined type '%s'", S_name(a->u.record.typ));
+			}
 			break;
 		}
 		case A_assignExp: {
@@ -233,7 +323,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 		case A_ifExp: {
 			// 首先翻译测试条件判断语句
 			struct expty test_exp = transExp(level, venv, tenv, a->u.iff.test);
-			if (actual_ty(test_exp.ty) != Ty_int) {
+			if (actual_ty(test_exp.ty)->kind != Ty_int) {
 				EM_error(a->u.iff.test->pos, "The TEST expression is not a number");
 			}
 			// trans the true-branch
@@ -271,11 +361,11 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 			Tr_genLoopDoneLabel(); // break的时候可以跳转至此处
 			struct expty test_exp,body_exp;
 			test_exp = transExp(level, venv, tenv, a->u.whilee.test);
-			if (actual_ty(test_exp.ty) != Ty_int){
+			if (actual_ty(test_exp.ty)->kind != Ty_int){
 				EM_error(a->pos, "The test exp in WHILE statment must return an INT value.");
 			}
 			body_exp = transExp(level, venv, tenv, a->u.whilee.body);
-			if (actual_ty(body_exp.ty) != Ty_void){
+			if (actual_ty(body_exp.ty)->kind != Ty_void){
 				EM_error(a->pos, "The body of WHILE statment must return void");
 			}
 
@@ -305,7 +395,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 			for_bottom_exp = transExp(level, venv, tenv, a->u.forr.lo);
 			for_upper_exp = transExp(level, venv, tenv, a->u.forr.hi);
 
-			if (actual_ty(for_bottom_exp.ty) != Ty_int || actual_ty(for_upper_exp.ty) != Ty_int ) {
+			if (actual_ty(for_bottom_exp.ty)->kind != Ty_int || actual_ty(for_upper_exp.ty)->kind != Ty_int ) {
 				EM_error(a->pos, "The FOR expression must be integer");
 			}
 
@@ -317,7 +407,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 			
 			var_exp = transVar(level, venv, tenv, A_SimpleVar(a->pos, var_sym));
 			body_exp = transExp(level, venv, tenv, a->u.forr.body);
-			if (actual_ty(body_exp.ty)!= Ty_void){
+			if (actual_ty(body_exp.ty)->kind != Ty_void){
 				EM_error(a->u.forr.body->pos, "Value return form FOR stm should be void");
 			}
 			
@@ -422,7 +512,6 @@ struct expty transVar(Tr_level level, S_table venv, S_table tenv, A_var v){
 			for (fList = exp.ty->u.record; fList != NULL; fList = fList->tail, offset++) {
 				field = fList->head;
 				if (field != NULL && field->name == v->u.field.sym) {
-					debug("transVar: A_fieldVar = %s", S_name(field->name));
 					te = Tr_fieldVar(exp.exp, offset);
 					return expTy(te, actual_ty(field->ty));
 				}
@@ -454,34 +543,327 @@ struct expty transVar(Tr_level level, S_table venv, S_table tenv, A_var v){
 }
 
 Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
+	Tr_exp tr_exp;
+	if (d == NULL){
+		// 如果是空，返回void
+		tr_exp = Tr_voidExp();
+		return tr_exp;
+	}
+	A_nametyList types;
+	A_namety type;
+	A_fundecList functions;
+	A_fundec head;
+	Ty_ty resultTy;
+	Ty_tyList formalTys;
+	E_enventry entry;
+	A_fieldList fList;
+	Ty_tyList tList;
+	struct expty e;
+	Ty_ty varDecTy;
+	Ty_ty ty;
+
+	/* used for frame manipulation */
+	Tr_access tr_acc;
+	U_boolList formal_escs;
+	Tr_level funLevel;
+	Tr_accessList tr_formals;
+
+	/* used in detecting cyclic type definition */
+	A_ty* nameTys;
+	int names = 0;
+	bool changed;
+	int ind;
+	A_ty aty;
+	bool* marked;
+	A_ty refered;
+	S_symbol* tySymbols;
+	S_symbol var_sym;
+	int total_marks;
+	int marked_len;
+
 	switch (d->kind){
 	case A_varDec: {
-		struct expty e = transExp(level,venv, tenv, d->u.var.init);
-		// #TODO Unknow function
-		// S_enter(venv, d->u.var.var, E_VarEntry(e.ty));
-		// The following version is simplified
-		S_enter(venv, d->u.var.var, 1); // #bug always return 1
+		var_sym = d->u.var.var;
+		
+		// translate the initializer
+		e = transExp(level,venv, tenv, d->u.var.init);
+		ty = actual_ty(e.ty);
+
+		// 检测变量类型
+		if (d->u.var.typ != NULL){
+			varDecTy = S_look(tenv, d->u.var.typ);
+			if (varDecTy == NULL){
+				EM_error(d->pos, 
+					"The initializer of variable '%s' is incompatible with the declared type", S_name(var_sym));
+			}
+		}
+		else {
+			if (ty->kind == Ty_nil) {
+				EM_error(d->pos, "Cannot inference the type of variable '%s' as NIL is used as initializer", S_name(var_sym));
+			}
+			varDecTy = e.ty;
+		}
+	
+		tr_acc = Tr_allocLocal(level, TRUE);//always escaping
+		S_enter(venv, var_sym, E_VarEntry(tr_acc, varDecTy));
+		tr_exp = Tr_assignExp(transVar(level, venv, tenv, A_SimpleVar(d->pos, d->u.var.var)).exp, e.exp);
 		break;
 	}
 	case A_typeDec: {
-		// #TODO the current version code is only able to 
-		// handle single line of type dec(see page 85),so 
-		// need further improvements
-		S_enter(tenv, d->u.type->head->name,
-			transTy(tenv,d->u.type->head->ty));
-		break;
-	}
-	case A_functionDec: {
-		// #TODO unimplememt case
-		/*A_fundec f = d->u.function->head;
-		Ty_ty resultTy = S_look(tenv, f->result);
-		*/
-		break;
-	}
-	}
-}
-Ty_ty transTy(S_table tenv, A_ty a){
+		//1) Put header of type declarations into the environment for 
+		//recursive reference during next step.
+		//1.1) Also check if there are types of same name. In a mutually 
+		//recursive declaration block no two types may have the same name.
+		//(namely no re-declaration)
+		SL_empty();
+		for (types = d->u.type; types != NULL; types = types->tail) {
+			type = types->head;
+			if (type != NULL) {
+				//1) Check if it's been used in this block
+				if (SL_check(type->name)) {
+					EM_error(d->pos,
+						"The type name '%s' has been used adjacently",
+						S_name(type->name));
+				}
+				else {
+					SL_push(type->name);
+				}
 
+				S_enter(tenv, type->name, transTyHeader(type->ty));
+
+				//Prepare for 3) - see below
+				if (type->ty->kind == A_nameTy) {
+					names++;
+				}
+			}
+		}
+
+		//Prepare for 3) - see below
+		nameTys = checked_malloc(sizeof(A_ty)*names);
+		tySymbols = checked_malloc(sizeof(S_symbol)*names);
+		marked = checked_malloc(sizeof(bool)*names);
+		for (ind = 0; ind < names; ind++) {
+			marked[ind] = FALSE;
+		}
+		marked_len = names;
+		names = 0;
+
+		//2) Translate type declarations: instantiate the body of Ty_ty
+		//created by transTyHeader().
+		for (types = d->u.type; types != NULL; types = types->tail) {
+			type = types->head;
+			if (type != NULL) {
+				transTy(tenv, type->name, type->ty);
+
+				//Prepare for 3) - see below
+				if (type->ty->kind == A_nameTy) {
+					tySymbols[names] = type->name;
+					nameTys[names++] = type->ty;
+				}
+			}
+		}
+
+		//3) Inspect cyclic references
+		total_marks = names;
+		while (total_marks>0) {
+			changed = FALSE;
+			for (ind = 0; ind < names; ind++) {
+				if (marked[ind] == TRUE) {
+					continue;
+				}
+				aty = nameTys[ind];
+				if (isReferToOutside(marked, marked_len, tySymbols, aty->u.name)) {
+					marked[ind] = TRUE;
+					changed = TRUE;
+					total_marks--;
+				}
+			}
+			if (changed == FALSE && total_marks>0) {
+				for (ind = 0; ind < names; ind++) {
+					if (marked[ind] == FALSE) {
+						aty = nameTys[ind];
+						EM_error(aty->pos, "Cyclic type definition detected: %s", S_name(tySymbols[ind]));
+					}
+				}
+				
+				break;
+			}
+		}
+		free(nameTys);
+		free(tySymbols);
+		free(marked);
+
+		//4) Print out the types [WARNING: Infinite loop]
+		/*
+		for(types = d->u.type; types!=NULL; types=types->tail){
+		if(types->head != NULL){
+		z_Ty_print(S_look(tenv, types->head->name), 0);
+		}
+		}
+		*/
+		tr_exp = Tr_voidExp();//Return NO_OP
+		break;
+	}
+	
+	case A_functionDec: {
+		SL_empty();
+		for (functions = d->u.function; functions != NULL; functions = functions->tail) {
+			head = functions->head;
+			if (head != NULL) {
+
+				//1.1) Check if it's been used in this block
+				if (SL_check(head->name)) {
+					EM_error(d->pos,
+						"The function name '%s' has been used adjacently",
+						S_name(head->name));
+				}
+				else {
+					SL_push(head->name);
+				}
+
+				//1.2) Determine the type of returned value
+				if (head->result != NULL) {
+					resultTy = S_look(tenv, head->result);
+				}
+				else {
+					resultTy = Ty_Void();
+				}
+
+				//1.3) Solve the formal parameter list
+				formalTys = makeFormalTyList(tenv, head->params);
+
+				//1.4) Enter a new function into env
+				//1.4.1) Create level
+				createEscapeList(&formal_escs, head->params);
+				funLevel = Tr_newLevel(level, Temp_namedlabel(S_name(head->name)), formal_escs);
+				free(formal_escs);
+				//1.4.2) Update env
+				S_enter(venv, head->name, E_FunEntry(funLevel, Temp_newlabel(), formalTys, resultTy));
+			}
+		}
+
+		//2) Translate function declarations.
+		for (functions = d->u.function; functions != NULL; functions = functions->tail) {
+			head = functions->head;
+			if (head != NULL) {
+				debug("  A_funDec translate body: %s", S_name(head->name));
+				//2.1) retrieve the formals of this E_FunEntry
+				entry = S_look(venv, head->name);
+				formalTys = entry->u.fun.formals;
+
+				//2.2) start new scope
+				S_beginScope(venv);
+
+				//2.3) add all parameters to venv as declared variables
+				//Use tail here since the first argument is the static link.
+				tr_formals = Tr_formals(entry->u.fun.level)->tail;
+				for (fList = head->params, tList = formalTys; fList != NULL;
+				fList = fList->tail, tList = tList->tail, tr_formals = tr_formals->tail) {
+					S_enter(venv, fList->head->name, E_VarEntry(tr_formals->head, tList->head));
+				}
+				//2.4) translate the body, which is an exp
+				e = transExp(entry->u.fun.level, venv, tenv, head->body);
+
+				//2.5) check the type compatibility between body and the declared returned value
+				resultTy = entry->u.fun.result;
+				if (head->result != NULL) {
+					//2.5.1) it's a function
+					ty = actual_ty(e.ty);
+					if (actual_ty(resultTy) != ty) {
+						if (ty->kind == Ty_void) {
+							EM_error(head->pos,
+								"The function '%s' has no value returned",
+								S_name(head->name));
+						}
+						else {
+							EM_error(head->pos,
+								"The returned value of function '%s' is incompatible with the declared one",
+								S_name(head->name));
+						}
+					}
+				}
+				else {
+					//2.5.2) it's a procedure
+					if (actual_ty(e.ty)->kind != Ty_void) {
+						EM_error(head->pos,
+							"The returned value of procedure '%s' will be ignored",
+							S_name(head->name));
+					}
+				}
+
+				//2.6) Translate to fragment
+				Tr_procEntryExit(entry->u.fun.level, e.exp, Tr_formals(entry->u.fun.level), entry->u.fun.label);
+
+				//2.7) exit the scope
+				S_endScope(venv);
+			}
+		}
+
+		tr_exp = Tr_voidExp();//Return NO_OP
+
+		break;
+	}
+	
+	}
+	return tr_exp;
+}
+Ty_ty transTy(S_table tenv,S_symbol sym, A_ty a){
+	A_fieldList flist;
+	Ty_fieldList tyList = Ty_FieldList(NULL, NULL);
+	Ty_fieldList tyList_head = tyList;
+
+	//Get entry of this type from env. Should have been entered by transTyHeader() 
+	Ty_ty this_ty = S_look(tenv, sym);
+	Ty_ty deref_ty;
+
+	S_symbol _sym;
+	Ty_ty ty;
+
+
+	switch (a->kind) {//A_nameTy, A_recordTy, A_arrayTy
+	case A_nameTy:
+		_sym = a->u.name;
+		ty = S_look(tenv, _sym);
+		if (ty == NULL) {
+			EM_error(a->pos, "Undefined type: %s", S_name(_sym));
+		}
+		else {
+			this_ty->u.name.ty = ty;
+		}
+		break;
+	case A_recordTy:
+		for (flist = a->u.record; flist != NULL; flist = flist->tail) {
+			A_field head = flist->head;
+			if (head == NULL) {
+				continue;
+			}
+			_sym = head->typ;
+			ty = S_look(tenv, _sym);
+			if (ty == NULL) {
+				EM_error(a->pos, "Undefined type: %s", S_name(_sym));
+			}
+			else {
+				tyList->tail = Ty_FieldList(NULL, NULL);
+				tyList->head = Ty_Field(head->name, ty);
+				tyList = tyList->tail;
+			}
+		}
+		//Terminate in case of error
+
+		tyList->tail = NULL;
+		this_ty->u.record = tyList_head;
+		break;
+	case A_arrayTy:
+		_sym = a->u.array;
+		ty = S_look(tenv, _sym);
+		if (ty == NULL) {
+			EM_error(a->pos, "Undefined type: %s", S_name(_sym));
+		}
+		else {
+			this_ty->u.array = ty;
+		}
+		break;
+	}
 }
 
 Ty_ty actual_ty(Ty_ty ty) {
@@ -489,4 +871,131 @@ Ty_ty actual_ty(Ty_ty ty) {
 		return actual_ty(ty->u.name.ty);
 	}
 	return ty; //Ty_record, Ty_nil, Ty_int, Ty_string, Ty_array, Ty_void, ~Ty_name~
+}
+
+E_enventry E_VarEntry(Tr_access access, Ty_ty ty) {
+	E_enventry entry = checked_malloc(sizeof(*entry));
+	entry->kind = E_varEntry;
+	entry->u.var.ty = ty;
+	entry->u.var.access = access;
+	return entry;
+}
+
+E_enventry E_FunEntry(Tr_level level, Temp_label label, Ty_tyList formals, Ty_ty result) {
+	E_enventry entry = checked_malloc(sizeof(*entry));
+	entry->kind = E_funEntry;
+	entry->u.fun.formals = formals;
+	entry->u.fun.result = result;
+	entry->u.fun.level = level;
+	entry->u.fun.label = label;
+	return entry;
+}
+
+// base type env
+S_table E_base_tenv(void) {
+	S_table table = S_empty();
+	S_enter(table, S_Symbol("int"), Ty_Int());
+	S_enter(table, S_Symbol("string"), Ty_String());
+	return table;
+}
+
+// base variable env
+S_table E_base_venv(void) {
+	S_table table = S_empty();
+	// #TODO 添加各种函数。。。
+	return table;
+}
+static Ty_ty transTyHeader(A_ty a) {
+	S_symbol sym;
+	Ty_ty ty;
+	switch (a->kind) {//A_nameTy, A_recordTy, A_arrayTy
+	case A_nameTy:
+		return Ty_Name(a->u.name, NULL);
+	case A_recordTy:
+		return Ty_Record(NULL);
+	case A_arrayTy:
+		return Ty_Array(NULL);
+	}
+}
+static bool isReferToOutside(bool* marked, int marked_len, S_symbol* syms, S_symbol refered) {
+	int i;
+	for (i = 0; i < marked_len; i++) {
+		if (syms[i] == refered) {
+			//Found the referred type in the dec sequence
+			return marked[i];
+		}
+	}
+	return TRUE;
+}
+
+Ty_tyList makeFormalTyList(S_table tenv, A_fieldList params) {
+	Ty_tyList tyList = Ty_TyList(NULL, NULL);
+	Ty_tyList tyList_head = tyList;
+	bool legal = TRUE;
+
+	S_symbol _sym;
+	Ty_ty ty;
+
+	//Always complete the checking for the formals regardless of errors
+	SL_empty();
+	for (; params != NULL; params = params->tail) {
+		A_field head = params->head;
+		if (head == NULL) {
+			continue;
+		}
+		//1) Check if the variable has been used as loop variant
+		if (VL_check(head->name)) {
+			EM_error( head->pos, "The name of loop variant '%s' cannot be reused by function's argument", S_name(head->name));
+		}
+		//2) Check if the type for this argument has been declared
+		_sym = head->typ;
+		ty = S_look(tenv, _sym);
+		if (ty == NULL) {
+			EM_error(head->pos, "Undefined type: %s", S_name(_sym));
+			legal = legal && FALSE;
+		}
+		//3) Check if the formal's name has been used in the list
+		if (!SL_check(head->name)) {
+			SL_push(head->name);
+		}
+		else {
+			EM_error(head->pos, "The name of formal argument '%s' has been used for this function", S_name(head->name));
+		}
+		if (legal) {
+			tyList->tail = Ty_TyList(NULL, NULL);
+			tyList->head = ty;
+			tyList = tyList->tail;
+		}
+	}
+
+	tyList->tail = NULL;
+
+	//Terminate if any error occured before in the loop
+
+	return tyList_head->head != NULL ? tyList_head : NULL;
+}
+void createEscapeList(U_boolList *formal_escs, A_fieldList fList) {
+	if (fList == NULL) {
+		*formal_escs = NULL;
+		return;
+	}
+
+	U_boolList escs = NULL;
+	U_boolList escs_head = NULL;
+	for (; fList != NULL; fList = fList->tail) {
+		if (escs_head == NULL) {
+			escs = U_BoolList(TRUE, NULL);
+			escs_head = escs;
+		}
+		else {
+			escs->tail = U_BoolList(TRUE, NULL);
+			escs = escs->tail;
+		}
+	}
+
+	if (escs != NULL) {
+		escs->tail = NULL;
+	}
+
+	*formal_escs = escs_head;
 }
