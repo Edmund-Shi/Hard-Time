@@ -22,6 +22,18 @@ struct patchList_ {
 };
 static patchList PatchList(Temp_label *head, patchList tail);
 
+// global stack operations
+typedef struct stack_node_ *stack_node;
+struct stack_node_ {
+	void *key;
+	stack_node next;
+};
+void GS_push(stack_node *plist, void *key);
+void GS_pop(stack_node *plist);
+void GS_empty(stack_node *plist);
+bool GS_check(stack_node list, void *key, bool(*compare)(void*, void*));
+void* GS_peek(stack_node *plist);
+
 
 struct Cx {
 	patchList trues;
