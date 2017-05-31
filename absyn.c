@@ -145,6 +145,7 @@ A_exp A_WhileExp(A_pos pos, A_exp test, A_exp body)
 
 A_exp A_ForExp(A_pos pos, S_symbol var, A_exp lo, A_exp hi, A_exp body)
 {
+	/*
 	A_exp p = checked_malloc(sizeof(*p));
 	p->kind = A_forExp;
 	p->pos = pos;
@@ -153,6 +154,14 @@ A_exp A_ForExp(A_pos pos, S_symbol var, A_exp lo, A_exp hi, A_exp body)
 	p->u.forr.hi = hi;
 	p->u.forr.body = body;
 	p->u.forr.escape = TRUE;
+	return p;
+	*/
+	A_exp p = checked_malloc(sizeof(*p));
+	S_symbol limit = S_Symbol("limit");
+	p->kind = A_letExp;
+	p->pos = pos;
+	p->u.let.decs = A_DecList(A_VarDec(pos, var, NULL, lo), A_DecList(A_VarDec(pos, limit, NULL, hi), NULL));
+	p->u.let.body = A_WhileExp(pos, A_OpExp(pos, A_leOp, var, limit), body);
 	return p;
 }
 

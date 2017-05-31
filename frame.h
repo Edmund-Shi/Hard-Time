@@ -12,6 +12,7 @@ struct F_frame_ {
 	int offset;
 	Temp_label begin_label; 
 };
+
 typedef struct F_access_ *F_access;
 struct F_access_ {
 	enum  	{ inFrame,inReg	} kind;
