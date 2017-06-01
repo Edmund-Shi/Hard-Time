@@ -21,7 +21,10 @@ struct E_enventry_ {
 		} fun;
 	}u;
 };
-
+struct expty {
+	Tr_exp exp;
+	Ty_ty ty;
+};
 // 初始化构造函数
 E_enventry E_VarEntry(Tr_access access, Ty_ty ty);
 E_enventry E_FunEntry(Tr_level level, Temp_label label, Ty_tyList formals, Ty_ty result);

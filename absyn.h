@@ -1,3 +1,7 @@
+/* absyn.h
+ * 这个头文件定义了抽象语法树的结构和生成抽象语法树某个节点的
+ * 函数，抽象语法树部分的大部分代码以 A_ 开头。
+ */
 #ifndef ABSYN_H_
 #define ABSYN_H_
 
@@ -10,7 +14,6 @@ typedef struct A_var_ *A_var;
 typedef struct A_exp_ *A_exp;
 typedef struct A_dec_ *A_dec;
 typedef struct A_ty_ *A_ty;
-
 typedef struct A_decList_ *A_decList;
 typedef struct A_expList_ *A_expList;
 typedef struct A_field_ *A_field;

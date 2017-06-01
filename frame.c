@@ -123,7 +123,7 @@ F_access InReg(Temp_temp reg)
 }
 
 F_accessList F_makeaccesslist(F_access head, F_accessList tail) {
-	F_accessList temp = NULL;
+	F_accessList temp = (F_accessList)checked_malloc(sizeof(*temp));
 	temp->head = head;
 	temp->tail = tail;
 	return temp;
@@ -135,7 +135,7 @@ static Temp_temp getNextReg(F_frame frame) {
 }
 
 F_frame F_newFrame(Temp_label name, U_boolList formals) {
-	F_frame frame = (F_frame)checked_malloc(sizeof(F_frame));
+	F_frame frame = (F_frame)checked_malloc(sizeof(*frame));
 	frame->formals = NULL;
 	frame->locals = 0;
 	frame->offset = 0;

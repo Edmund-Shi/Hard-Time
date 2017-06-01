@@ -2,10 +2,9 @@
 #include "log.h"
 #include "string.h"
 
-void assert(int errno){
-	int p = errno;
-
-	if (errno == 0){
+void assert(int errnum){
+	int p = errnum;
+	if (errnum == 0){
 		Log("assert 0", "Unknow Error!\nExit program!");
 		exit(0);
 		return;

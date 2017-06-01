@@ -9,8 +9,9 @@
 extern int yyparse();
 A_exp root;
 int main(void){
-	FILE *absynTree;
+	FILE *absynTree, *test;
 	absynTree = fopen("AbsynTree.txt", "w");
+	freopen("test.txt", "r", stdin);
 	if (absynTree == NULL){
 		printf("Can't open abtree file!\n");
 		exit(0);

@@ -69,10 +69,7 @@ S_table E_base_venv();
 
 // IR tree with type check 
 
-struct expty {
-	Tr_exp exp;
-	Ty_ty ty;
-};
+
 
 struct expty expTy(Tr_exp exp, Ty_ty ty) {
 	struct expty e;
@@ -113,7 +110,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 	}
 
 	Tr_exp te; // 总的表达式
-	switch (a -> kind){
+	switch (a->kind){
 		case A_intExp:{
 			te = Tr_intExp(a->u.intt);
 			return expTy(te, Ty_Int());
@@ -306,7 +303,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 				resexpty = expTy(Tr_voidExp(), Ty_Void());
 			}
 			else {
-				te_array = (Tr_exp*)checked_malloc(i*sizeof(Tr_exp));
+				te_array = (Tr_exp*)checked_malloc(i*sizeof(struct Tr_exp_));
 				for (expList = a->u.seq, i = 0; expList;expList = expList->tail) {
 					// 进行逐语句的翻译
 					exp = expList->head;
@@ -319,7 +316,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 				resexpty = expTy(Tr_seqExp(te_array, i), resexpty.ty);
 				free(te_array);
 			}
-			break;
+			return resexpty;
 		}
 		case A_ifExp: {
 			// 首先翻译测试条件判断语句
@@ -376,9 +373,8 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 			return expTy(Tr_whileExp(test_exp.exp, body_exp.exp), Ty_Void());
 		}
 		// 不应该出现For语句
-		/*
-		case A_forExp: {
-			break;
+		case A_forExp:{
+			//break;
 			// 需要注意的是，for语句中可能会定义新的变量，需要新的环境
 			S_beginScope(venv);
 
@@ -418,7 +414,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 			S_endScope(venv);
 			return expTy(Tr_forExp(var_exp.exp, for_bottom_exp.exp, for_upper_exp.exp, body_exp.exp), Ty_Void());
 		}
-		*/
+		
 		case A_breakExp:{
 			if (VL_isEmpty()){
 				EM_error(a->pos, "BREAK only avialiable in loop structure.");
@@ -435,7 +431,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 					i++;
 				}
 			}
-			Tr_exp * te_array = (Tr_exp *)checked_malloc((i + 1)*sizeof(Tr_exp));
+			Tr_exp * te_array = (Tr_exp *)checked_malloc((i + 1)*sizeof(struct Tr_exp_));
 			i = 0;
 			
 			// 逐个声明进行遍历
