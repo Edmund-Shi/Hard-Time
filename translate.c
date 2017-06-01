@@ -252,7 +252,7 @@ Tr_exp Tr_arithExp(A_oper oper, Tr_exp left, Tr_exp right) {
 	case A_divideOp:
 		return Tr_Ex(T_Binop(T_div, unEx(left), unEx(right)));
 	//# 错误处理
-	//Assert(0);
+	//assert(0);
 	}
 	printf("Error in translate.c function Tr_arithExp!");
 	exit(1);
@@ -313,7 +313,7 @@ Tr_exp Tr_logicExp(A_oper oper, Tr_exp left, Tr_exp right, bool isStrCompare) {
 			stm = T_Cjump(T_eq, call, T_Const(0), NULL, NULL);
 			break;
 		//# 错误处理
-		//Assert(0);
+		//assert(0);
 		}
 	}
 	else {
@@ -337,7 +337,7 @@ Tr_exp Tr_logicExp(A_oper oper, Tr_exp left, Tr_exp right, bool isStrCompare) {
 			stm = T_Cjump(T_ge, unEx(left), unEx(right), NULL, NULL);
 			break;
 		//# 错误处理
-		//Assert(0);
+		//assert(0);
 		}
 	}
 	tl = PatchList(&stm->u.CJUMP.true, NULL);

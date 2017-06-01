@@ -3,13 +3,17 @@
 #include "string.h"
 
 void assert(int errno){
-	switch (errno){
-		case 0: {
-			Log("Assert 0", "Unknow Error!\nExit program!");
-			exit(0);
-			return;
-		}
+	int p = errno;
+
+	if (errno == 0){
+		Log("assert 0", "Unknow Error!\nExit program!");
+		exit(0);
+		return;
 	}
+	else {
+		return;
+	}
+	
 }
 string String(char *s) {
 	string p = checked_malloc(strlen(s) + 1);

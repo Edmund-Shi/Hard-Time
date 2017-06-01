@@ -33,7 +33,7 @@ void ClearLog(void) {
 	return;
 }
 
-void Log(string tag, string *message, ...) {
+void Log(string tag, string message, ...) {
 	va_list ap;
 	va_start(ap, message);
 	fprintf(gfp, "%s: ", tag);
