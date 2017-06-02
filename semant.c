@@ -198,7 +198,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 			Ty_field tyField;
 			struct expty expty;
 			A_exp exp;
-			int arg_number;
+			int arg_number = EXACT_ARGS;
 			ty = S_look(tenv, a->u.record.typ);
 			int i;
 			//1) Check if the record expression's leading ID is a declared record type
@@ -228,7 +228,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 								"The field %d initialized for record '%s' is inconsistent with the declared field's name '%s'",
 								i, S_name(a->u.record.typ), S_name(tyField->name));
 						}
-						else {
+						else { 
 							//2.2) Check the compatibility between the declared field type and that of the initializer
 							expty = transExp(level, venv, tenv, a_efield->exp);
 							if ( expty.ty != tyField->ty) {
