@@ -29,8 +29,8 @@ struct expty {
 E_enventry E_VarEntry(Tr_access access, Ty_ty ty);
 E_enventry E_FunEntry(Tr_level level, Temp_label label, Ty_tyList formals, Ty_ty result);
 
-
-struct expty SEM_transProg(A_exp exp);
+// #bug 可能存在问题
+T_stm SEM_transProg(A_exp exp);
 
 // The following functions only available to semant.c file
 //struct expty transVar(S_table venv, S_table tenv, A_var v);

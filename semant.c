@@ -87,7 +87,7 @@ void init() {
 	dummy_expty_p->ty = Ty_Void();
 }
 
-struct expty SEM_transProg(A_exp exp){
+T_stm SEM_transProg(A_exp exp){
 	init();
 
 	S_table venv = E_base_venv();
@@ -97,7 +97,15 @@ struct expty SEM_transProg(A_exp exp){
 	struct expty result = transExp(mainlevel, venv, tenv, exp);
 	
 	// #TODO print IR tree
-	return result;
+	return getResult(result);
+	/*if (result.exp->kind == Tr_ex){
+		return result.exp->u.ex;
+	}else if (result.exp->kind == Tr_nx){
+		return result.exp->u.nx;
+	}
+	else {
+		Log("SEMANT","ERROR: CX find in the final result");
+	}*/
 }
 #define EXACT_ARGS 0
 #define LESS_ARGS 1
@@ -224,7 +232,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 							//2.2) Check the compatibility between the declared field type and that of the initializer
 							expty = transExp(level, venv, tenv, a_efield->exp);
 							if ( expty.ty != tyField->ty) {
-								EM_error( exp->pos,
+								EM_error( a->pos,
 									"Type of field %d initialized for record '%s' is incompatible with the declared type",
 									i, S_name(a->u.record.typ));
 							}

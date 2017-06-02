@@ -6,6 +6,7 @@
 #include "frame.h"
 #include "absyn.h" // for A_oper
 
+
 typedef struct patchList_ *patchList;
 struct patchList_ {
 	Temp_label *head;
@@ -83,6 +84,6 @@ Tr_exp Tr_forExp(Tr_exp var, Tr_exp low, Tr_exp high, Tr_exp body);
 //Tranlation for expressions
 //Tr_exp Tr_forExp(Tr_exp var, Tr_exp low, Tr_exp high, Tr_exp body);
 
-
+T_stm getResult(struct expty res);
 
 #endif

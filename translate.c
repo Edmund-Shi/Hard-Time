@@ -2,7 +2,7 @@
 #include "translate.h"
 #include "tree.h"
 #include "frame.h"
-
+#include "semant.h"
 static stack_node loop_label_list = NULL;
 
 static void LL_push(Temp_label label) {
@@ -465,6 +465,12 @@ Tr_exp Tr_forExp(Tr_exp var, Tr_exp low, Tr_exp high, Tr_exp body) {
 
 	return Tr_Nx(st);
 }
+
+T_stm getResult(struct expty res)
+{
+	return unNx(res.exp);
+}
+
 Tr_exp Tr_breakExp() {
 	//Get done label from the list, which should have been prepared before this function is called.
 	Temp_label f = LL_peek();

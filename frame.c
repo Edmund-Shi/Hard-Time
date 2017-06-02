@@ -182,7 +182,7 @@ F_access F_allocLocal(F_frame f, bool escape){
 }
 
 F_frag F_StringFrag(Temp_label label, string str) {
-	F_frag temp = checked_malloc(sizeof(F_frag));
+	F_frag temp = checked_malloc(sizeof(struct F_frag_));
 	temp->kind = F_stringFrag;
 	temp->u.stringg.label = label;
 	temp->u.stringg.str = str;
@@ -190,7 +190,7 @@ F_frag F_StringFrag(Temp_label label, string str) {
 }
 
 F_frag F_ProcFrag(T_stm body, F_frame frame) {
-	F_frag temp = checked_malloc(sizeof(F_frag));
+	F_frag temp = checked_malloc(sizeof(struct F_frag_));
 	temp->kind = F_procFrag;
 	temp->u.proc.body = body;
 	temp->u.proc.frame = frame;
@@ -220,7 +220,7 @@ static F_fragList *fragList = NULL;
 static F_fragList fragList_head = NULL;
 static F_frag* extendFragList() {
 	if (fragList == NULL) {
-		fragList = (F_fragList*)checked_malloc(sizeof(F_fragList*));
+		fragList = (F_fragList*)checked_malloc(sizeof(struct F_fragList_));
 	}
 
 	*fragList = (F_fragList)checked_malloc(sizeof(struct F_fragList_));

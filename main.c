@@ -9,8 +9,9 @@
 extern int yyparse();
 A_exp root;
 int main(void){
-	FILE *absynTree, *test;
+	FILE *absynTree, *test,*IRtree;
 	absynTree = fopen("AbsynTree.txt", "w");
+	IRtree = fopen("IRtree.txt", "w");
 	freopen("test.txt", "r", stdin);
 	if (absynTree == NULL){
 		printf("Can't open abtree file!\n");
@@ -19,10 +20,14 @@ int main(void){
 	ClearLog();
 	openLog(); /*open log at the beginnig and colse it before exit*/
 	yyparse();
-	SEM_transProg(root);
+	T_stm result;
+	result = SEM_transProg(root);
+	T_stmList list = T_StmList(result, NULL);
+	printStmList(IRtree, list);
 
 	pr_exp(absynTree, root, 0);
 	fclose(absynTree);
+	fclose(IRtree);
 	printf("Parse Done\n");
 	closeLog();
 	return 0;

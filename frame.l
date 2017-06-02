@@ -6,7 +6,7 @@
 #include "util.h"
 #include "frame.tab.h"
 #include "errormsg.h"
-
+#define MAX_STR_CONST 256
 int charPos = 1;
 int yywrap(void){
 	charPos = 1;
@@ -18,21 +18,31 @@ void adjust(void){
 	charPos += yyleng;
 }
 
-/* Need to add token to deal with comments and string !*/
+/* Things to deal with string */
+char string_buf[MAX_STR_CONST];
+char *string_buf_ptr;
+
+/* Things to deal with comments */
+int comm_level = 0;
+
 %}
 
 int_val [0-9]+
 id [A-Za-z][_a-zA-Z0-9]*
 
+%x str
+%x comments
 
 %%
+\"  string_buf_ptr = string_buf; BEGIN(str);
+"/*"	{comm_level++; BEGIN(comments); }
 [ \t]+ 	{ adjust(); }
 [\n] 	{ adjust(); EM_newline();}
 "," 	{ adjust(); return COMMA;}
 ":="	{ adjust(); return ASSIGN;}
 ";" 	{ adjust(); return SEMICOLON; }
 ":"	{ adjust(); return COLON;}
-"(" 	{ adjust(); return LPAREN;}
+"(" 	{ adjust(); return LPAREN; }
 ")"	{ adjust(); return RPAREN;}
 "{"	{ adjust(); return LBRACE; }
 "}"	{ adjust(); return RBRACE; }
@@ -78,7 +88,57 @@ while   { adjust(); return WHILE;}
 	yylval.ival = atoi(yytext); 
 	return INTT; 
 }
+<str>\" { /* saw closing quote - all done */
+        BEGIN(INITIAL);
+        *string_buf_ptr = '\0';
+        yylval.sval = String(string_buf);
+        return STRING;
+        }
+<str>\n        {
+		*string_buf_ptr = '\0';
+		EM_error(EM_tokPos,"multiline string is not support:%s",string_buf);
+        /* error - unterminated string constant */
+        /* generate error message */
+        }
 
+<str>\\[0-7]{1,3} {
+        /* octal escape sequence */
+        int result;
+
+        (void) sscanf( yytext + 1, "%o", &result );
+
+        if ( result > 0xff )
+                /* error, constant is out-of-bounds */
+
+        *string_buf_ptr++ = result;
+        }
+
+<str>\\[0-9]+ {
+        /* generate error - bad escape sequence; something
+         * like '\48' or '\0777777'
+         */
+        }
+
+<str>\\n  *string_buf_ptr++ = '\n';
+<str>\\t  *string_buf_ptr++ = '\t';
+<str>\\r  *string_buf_ptr++ = '\r';
+<str>\\b  *string_buf_ptr++ = '\b';
+<str>\\f  *string_buf_ptr++ = '\f';
+
+<str>\\(.|\n)  *string_buf_ptr++ = yytext[1];
+
+<str>[^\\\n\"]+        {
+        char *yptr = yytext;
+
+        while ( *yptr )
+                *string_buf_ptr++ = *yptr++;
+        }
+
+<comments>{
+	"/*"	comm_level ++;
+	"*/"	{comm_level--; if(comm_level==0) BEGIN(INITIAL); }
+	.	/* Do nothing */ ;
+}
 . { /*Log("Lex analyse","Unknown token:%s",yytext);*/ EM_error(EM_tokPos,"Unknown token:%s",yytext); }
 
 %%
