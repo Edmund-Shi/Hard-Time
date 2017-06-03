@@ -734,7 +734,7 @@ Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
 				else {
 					resultTy = Ty_Void();
 				}
-
+				
 				//1.3) Solve the formal parameter list
 				formalTys = makeFormalTyList(tenv, head->params);
 

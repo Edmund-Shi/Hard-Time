@@ -39,7 +39,9 @@ void traverseDec(A_dec dec) {
 	A_fieldList list2;
 
 	//A_typeDec do nothing
+
 	if (dec->kind == A_functionDec) {
+		//暂且把所有元素当作是逃逸的
 		list1 = dec->u.function;
 		while (list1 != NULL) {
 			depth++;
@@ -56,8 +58,11 @@ void traverseDec(A_dec dec) {
 		}
 	}
 	else if (dec->kind == A_varDec) {
+		if (dec->u.var.init->kind == A_arrayExp)
+			dec->u.var.escape = TRUE;
 		S_enter(environment, dec->u.var.var, e_entry(depth, &dec->u.var.escape));
 		traverseExp(dec->u.var.init);
+
 	}
 	
 }
@@ -132,6 +137,7 @@ void traverseExp(A_exp exp) {
 	else if (exp->kind == A_arrayExp) {
 		traverseExp(exp->u.array.size);
 		traverseExp(exp->u.array.init);
+		
 	}
 }
 
