@@ -78,7 +78,9 @@ struct expty expTy(Tr_exp exp, Ty_ty ty) {
 
 // global dummy node
 static struct expty *dummy_expty_p;
-
+Tr_level Tr_getParent(Tr_level level) {
+	return level->parent;
+}
 void init() {
 	dummy_expty_p = (struct expty*) checked_malloc(sizeof(struct expty));
 	dummy_expty_p->exp = Tr_voidExp();
@@ -133,7 +135,83 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 			return expTy(te, Ty_String());
 		}
 		case A_callExp: {
-			// #TODO unfinished function
+			Ty_tyList formals;
+			A_expList args;
+			Ty_ty ty;
+			E_enventry entry;
+			int arg_number;
+			Tr_exp* arg_exps;
+			struct expty expty;
+			arg_number = EXACT_ARGS;
+			A_exp exp;
+			entry = S_look(venv, a->u.call.func);
+			// check if function is defined
+			int i;
+			if (entry != NULL && entry->kind == E_funEntry) {
+				i = 0;
+				for (formals = entry->u.fun.formals; formals != NULL; formals = formals->tail) {
+					if (formals->head != NULL) {
+						i++;
+					}
+				}
+				arg_exps = (i > 0) ? (Tr_exp*)checked_malloc(i * sizeof(Tr_exp)) : NULL;
+				// Check the arguments
+				i = 0;
+				for (formals = entry->u.fun.formals, args = a->u.call.args;
+				formals != NULL && args != NULL;
+					formals = formals->tail, args = args->tail, i++) {
+					ty = formals->head;
+					exp = args->head;
+					if (exp != NULL && ty != NULL) {
+						expty = transExp(level, venv, tenv, exp);
+						if (actual_ty(expty.ty) != actual_ty(ty)) {
+							EM_error(exp->pos,
+								"Type of argument %d passed to function '%s' is incompatible with the declared type",
+								i + 1, S_name(a->u.call.func));
+						}
+						// Put argument into the arg list
+						arg_exps[i] = expty.exp;
+					}
+					else {
+						if (exp == NULL && ty != NULL) {
+							arg_number = LESS_ARGS;
+							break;
+						}
+						else if (exp != NULL && ty == NULL) {
+							arg_number = MORE_ARGS;
+							break;
+						}
+					}
+				}
+				if (formals != NULL && args == NULL) {
+					if (formals->head != NULL) {
+						arg_number = LESS_ARGS;
+					}
+				}
+				else if (formals == NULL && args != NULL) {
+					if (args->head != NULL) {
+						arg_number = MORE_ARGS;
+					}
+				}
+				if (arg_number == MORE_ARGS) {
+					EM_error(a->pos,
+						"More than necessary arguments are passed to function '%s'", S_name(a->u.call.func));
+				}
+				else if (arg_number == LESS_ARGS) {
+					EM_error(a->pos,
+						"Less than necessary arguments are passed to function '%s'", S_name(a->u.call.func));
+				}
+			
+				// Generate IR tree
+				te = Tr_callExp(level, Tr_getParent(entry->u.fun.level), entry->u.fun.label, arg_exps, i);
+				free(arg_exps);
+
+				return expTy(te, entry->u.fun.result);
+			}
+			else {
+				EM_error(a->pos, "Undefined function: %s", S_name(a->u.call.func));
+				
+			}
 		}
 		case A_opExp: {
 			struct expty left_expty, right_expty;
@@ -172,7 +250,6 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 				// #bug 除了基本类型以外的类型的比较可能会出现bug
 				if (right_ty->kind != left_ty->kind){
 					EM_error(a->pos, "The left part and the right part should be the same type!");
-					// #TODO error handle
 				}
 				else {
 					if (right_ty->kind == Ty_string && left_ty->kind == Ty_string) {
@@ -207,9 +284,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 						cnt++;
 					}
 				}
-				//debug("record fields in total: %d", cnt);
 				te = Tr_recordExp_new(cnt);
-
 				//2) Recursively check each field
 				
 				for (tyfList = ty->u.record, eFields = a->u.record.fields, i = 1;
@@ -217,9 +292,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 					tyfList = tyfList->tail, eFields = eFields->tail, i++) {
 					tyField = tyfList->head;
 					a_efield = eFields->head;
-					//debug("record field");
 					if (tyField != NULL && a_efield != NULL) {
-						//debug("record field init: %d", i);
 						//2.1) Check field name's consistency
 						if (tyField->name != a_efield->name) {
 							EM_error(a_efield->exp->pos,
@@ -257,14 +330,10 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 						"More than necessary fields are initialized for record '%s'", S_name(a->u.record.typ));
 				}
 				else if (arg_number == LESS_ARGS || (tyfList != NULL && tyfList->head != NULL)) {
-					EM_error( a->pos,
+					EM_error(a->pos,
 						"Less than necessary fields are initialized for record '%s'", S_name(a->u.record.typ));
 				}
-
-				//Terminate in case of any error
-		
-
-				//3) Return the result
+				// 直接返回结果
 				return expTy(te, ty);
 			}
 			else {
@@ -274,7 +343,6 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 		}
 		case A_assignExp: {
 			S_symbol var_sym = a->u.assign.var->u.simple;
-			// #TODO 检查此变量是否可以被赋值
 			struct expty var_exp,assign_exp;
 			// 检查变量是否在环境中声明过
 			// 先计算左边，再计算右边
@@ -378,7 +446,6 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 
 			return expTy(Tr_whileExp(test_exp.exp, body_exp.exp), Ty_Void());
 		}
-		// 不应该出现For语句
 		case A_forExp:{
 			//break;
 			// 需要注意的是，for语句中可能会定义新的变量，需要新的环境
@@ -390,7 +457,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 				EM_error(a->pos, "The name '%s' has been used in the outer variables", S_name(var_sym));
 			}
 			else{
-				VL_push(var_sym); // #TODO finish VL_XXXX 操作
+				VL_push(var_sym); 
 			}
 			Tr_genLoopDoneLabel(); // break的时候可以跳转至此处
 
@@ -405,7 +472,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 
 			// 进入新的变量环境
 			//#TODO 完成Tr_allocLocal函数
-			Tr_access tr_acc = Tr_allocLocal(level, FALSE ); // #bug 总是不逃逸的？？
+			Tr_access tr_acc = Tr_allocLocal(level, FALSE ); 
 			S_enter(venv, var_sym, E_VarEntry(tr_acc, Ty_Int()));
 			struct expty var_exp, body_exp;
 			
@@ -599,13 +666,12 @@ Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
 		if (d->u.var.typ != NULL){
 			varDecTy = S_look(tenv, d->u.var.typ);
 			if (varDecTy == NULL){
-				EM_error(d->pos, 
-					"The initializer of variable '%s' is incompatible with the declared type", S_name(var_sym));
+				EM_error(d->pos, "Variable type incompatible!");
 			}
 		}
 		else {
-			if (ty->kind == Ty_nil) {
-				EM_error(d->pos, "Cannot inference the type of variable '%s' as NIL is used as initializer", S_name(var_sym));
+			if (ty->kind == Ty_nil) { 
+				EM_error(d->pos, "NIL can't be variable type");
 			}
 			varDecTy = e.ty;
 		}
@@ -616,11 +682,6 @@ Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
 		break;
 	}
 	case A_typeDec: {
-		//1) Put header of type declarations into the environment for 
-		//recursive reference during next step.
-		//1.1) Also check if there are types of same name. In a mutually 
-		//recursive declaration block no two types may have the same name.
-		//(namely no re-declaration)
 		SL_empty();
 		for (types = d->u.type; types != NULL; types = types->tail) {
 			type = types->head;
@@ -660,8 +721,6 @@ Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
 			type = types->head;
 			if (type != NULL) {
 				transTy(tenv, type->name, type->ty);
-
-				//Prepare for 3) - see below
 				if (type->ty->kind == A_nameTy) {
 					tySymbols[names] = type->name;
 					nameTys[names++] = type->ty;
@@ -669,7 +728,7 @@ Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
 			}
 		}
 
-		//3) Inspect cyclic references
+		//3)检查是否发生循环定义
 		total_marks = names;
 		while (total_marks>0) {
 			changed = FALSE;
@@ -699,14 +758,6 @@ Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
 		free(tySymbols);
 		free(marked);
 
-		//4) Print out the types [WARNING: Infinite loop]
-		/*
-		for(types = d->u.type; types!=NULL; types=types->tail){
-		if(types->head != NULL){
-		z_Ty_print(S_look(tenv, types->head->name), 0);
-		}
-		}
-		*/
 		tr_exp = Tr_voidExp();//Return NO_OP
 		break;
 	}
@@ -717,7 +768,7 @@ Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
 			head = functions->head;
 			if (head != NULL) {
 
-				//1.1) Check if it's been used in this block
+				//1.1) 检查重定义
 				if (SL_check(head->name)) {
 					EM_error(d->pos,
 						"The function name '%s' has been used adjacently",
