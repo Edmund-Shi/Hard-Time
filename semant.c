@@ -92,7 +92,7 @@ T_stm SEM_transProg(A_exp exp){
 	S_table venv = E_base_venv();
 	S_table tenv = E_base_tenv();
 
-	Tr_level mainlevel = Tr_newLevel(Tr_outermost(), Temp_namedlabel("main"), NULL);
+	Tr_level mainlevel = Tr_newLevel(Tr_outLevel(), Temp_namedlabel("main"), NULL);
 	struct expty result = transExp(mainlevel, venv, tenv, exp);
 	
 	// #TODO print IR tree
