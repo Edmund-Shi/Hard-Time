@@ -72,3 +72,13 @@ bool GS_check(stack_node list, void* key, bool(*compare)(void*, void*)) {
 		if (compare(cursor->key, key))return TRUE;
 	return FALSE;
 }
+//size
+int GS_size(stack_node *plist) {
+	int i = 0;
+	stack_node list = *plist;
+	while (list != NULL) {
+		i++;
+		list = list->last;
+	}
+	return i;
+}

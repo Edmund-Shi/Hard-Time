@@ -43,5 +43,6 @@ void GS_pop(stack_node *plist);
 void GS_empty(stack_node *plist);
 void *GS_peek(stack_node *plist);
 bool GS_check(stack_node list, void* key, bool (*compare)(void*, void*));
+int GS_size(stack_node *plist);
 //Stack Structure Declaration End
 #endif
