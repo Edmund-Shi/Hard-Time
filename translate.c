@@ -236,10 +236,29 @@ Tr_exp Tr_assignExp(Tr_exp lvalue, Tr_exp right) {
 Tr_exp Tr_intExp(int int_val) {
 	return Tr_Ex(T_Const(int_val));
 }
-Tr_exp Tr_stringExp(string str_val) {
-	Temp_label t1 = Temp_newlabel();
-	F_String(t1, str_val);
-	return Tr_Ex(T_Name(t1));
+//Tr_exp Tr_stringExp(string str_val) {
+//	Temp_label t1 = Temp_newlabel();
+//	F_String(t1, str_val);
+//	return Tr_Ex(T_Name(t1));
+//}
+
+Tr_exp Tr_stringExp(string _str) {
+	T_expList list = NULL, head = NULL;
+	char *p = _str;
+	while (*p != '\0') {
+		if (head == NULL) {
+			list = (T_expList)checked_malloc(sizeof(struct T_expList_));
+			head = list;
+		}
+		else {
+			list->tail = (T_expList)checked_malloc(sizeof(struct T_expList_));
+			list = list->tail;
+		}
+		list->head = T_Const((int)(*p));
+		list->tail = NULL;
+		p++;
+	}
+	return Tr_Ex(F_externalCall("initString", head));
 }
 Tr_exp Tr_arithExp(A_oper oper, Tr_exp left, Tr_exp right) {
 	switch (oper) {
@@ -344,11 +363,7 @@ Tr_exp Tr_logicExp(A_oper oper, Tr_exp left, Tr_exp right, bool isStrCompare) {
 	fl = PatchList(&stm->u.CJUMP.false, NULL);
 	return Tr_Cx(tl, fl, stm);
 }
-void Tr_procEntryExit(Tr_level level, Tr_exp body, Tr_accessList formals, Temp_label label) {
-	T_stm stm;
-	stm = T_Seq(T_Label(label), T_Move(T_Temp(F_RV()), unEx(body)));
-	F_Proc(stm, level->frame);
-}
+
 Tr_exp Tr_callExp(Tr_level caller_lvl, Tr_level callee_lvl, Temp_label fun_label, Tr_exp* argv, int args) {
 	int z = 0, cnt = 0;
 	T_exp slk;
