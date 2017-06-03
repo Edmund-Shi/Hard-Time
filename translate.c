@@ -201,9 +201,16 @@ Tr_exp Tr_ifExp(Tr_exp _cond, Tr_exp _t, Tr_exp _f) {
 }
 //对于字符串的处理
 Tr_exp Tr_stringExp(string _str) {
-	Temp_label t = Temp_newlabel();
-	F_String(t, _str);
-	return Tr_Ex(T_Name(t));
+	T_expList list = (T_expList)checked_malloc(sizeof(struct T_expList_));
+	T_expList head = list;
+	char *p = _str;
+	while (*p != '\0') {
+		list->head = T_Const((int)*p);
+		list->tail = (Tr_exp)checked_malloc(sizeof(struct T_expList_));
+		list = list->tail;
+		p++;
+	}
+	return Tr_Ex(F_externalCall("initString", head));
 }
 //处理记录的创建，调用 malloc 函数并绑定一个临时变量
 Tr_exp Tr_recordExp_new(int _count) {
