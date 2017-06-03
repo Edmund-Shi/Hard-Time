@@ -797,10 +797,7 @@ Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
 					}
 				}
 
-				//2.6) Translate to fragment
-				Tr_procEntryExit(entry->u.fun.level, e.exp, Tr_formals(entry->u.fun.level), entry->u.fun.label);
-
-				//2.7) exit the scope
+				//2.6) exit the scope
 				S_endScope(venv);
 			}
 		}
