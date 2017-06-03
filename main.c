@@ -20,7 +20,8 @@ int main(void){
 	}
 	ClearLog();
 	openLog(); /*open log at the beginnig and colse it before exit*/
-	yyparse();
+	yyparse();//YACC
+	
 	
 	Esc_findEscape(root);
 	

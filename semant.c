@@ -612,7 +612,7 @@ Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
 			varDecTy = e.ty;
 		}
 	
-		tr_acc = Tr_allocLocal(level, TRUE);//always escaping
+		tr_acc = Tr_allocLocal(level, d->u.var.escape);//always escaping
 		S_enter(venv, var_sym, E_VarEntry(tr_acc, varDecTy));
 		tr_exp = Tr_assignExp(transVar(level, venv, tenv, A_SimpleVar(d->pos, d->u.var.var)).exp, e.exp);
 		break;

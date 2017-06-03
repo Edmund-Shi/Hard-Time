@@ -61,6 +61,7 @@ Temp_temp F_SN(int i) {
 		return sn[i];
 	}
 	else {
+		
 		EM_error(i, "Internal error: using a pointer that is not available for MIPS.");
 		//printf("Internal error: using a pointer that is not available for MIPS.");
 		exit(2);
@@ -206,11 +207,6 @@ F_fragList F_FragList(F_frag head, F_fragList tail) {
 	return temp;
 }
 
-//?? 下面有问题
-/*
-
-}
-*/
 static F_fragList *fragList = NULL;
 static F_fragList fragList_head = NULL;
 static F_frag* extendFragList() {
