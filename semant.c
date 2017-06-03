@@ -69,8 +69,6 @@ S_table E_base_venv();
 
 // IR tree with type check 
 
-
-
 struct expty expTy(Tr_exp exp, Ty_ty ty) {
 	struct expty e;
 	e.exp = exp;
