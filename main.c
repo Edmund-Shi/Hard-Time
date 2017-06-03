@@ -21,7 +21,7 @@ int main(void){
 	openLog(); /*open log at the beginnig and colse it before exit*/
 	yyparse();
 	T_stm result;
-	result = SEM_transProg(root);
+ 	result = SEM_transProg(root);
 	T_stmList list = T_StmList(result, NULL);
 	printStmList(IRtree, list);
 

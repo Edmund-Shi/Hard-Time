@@ -14,6 +14,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a);
 Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d);
 Ty_ty transTy(S_table tenv, S_symbol sym, A_ty a);
 Ty_ty actual_ty(Ty_ty ty); // return the actual type of ty
+static bool looseTyCompare(Ty_ty a, Ty_ty b);
 Ty_ty transTyHeader(A_ty a);
 bool isReferToOutside(bool* marked, int marked_len, S_symbol* syms, S_symbol refered);
 Ty_tyList makeFormalTyList(S_table tenv, A_fieldList params);
@@ -43,11 +44,6 @@ static bool VL_isEmpty() {
 /* Loop variants END */
 
 /* Symbol list (for generic use) START */
-static void SL_push(S_symbol sym);
-static void SL_pop();
-static bool SL_check(S_symbol sym);
-static void SL_empty();
-
 static stack_node symbol_list = NULL;
 
 static void SL_push(S_symbol sym) {
@@ -61,6 +57,9 @@ static bool SL_check(S_symbol sym) {
 }
 static void SL_empty() {
 	GS_empty(&symbol_list);
+}
+static int SL_size() {
+	return GS_size(symbol_list);
 }
 /* Symbol list (for generic use) END */
 
@@ -198,7 +197,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 			Ty_field tyField;
 			struct expty expty;
 			A_exp exp;
-			int arg_number;
+			int arg_number = EXACT_ARGS;
 			ty = S_look(tenv, a->u.record.typ);
 			int i;
 			//1) Check if the record expression's leading ID is a declared record type
@@ -228,10 +227,10 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 								"The field %d initialized for record '%s' is inconsistent with the declared field's name '%s'",
 								i, S_name(a->u.record.typ), S_name(tyField->name));
 						}
-						else {
+						else { 
 							//2.2) Check the compatibility between the declared field type and that of the initializer
 							expty = transExp(level, venv, tenv, a_efield->exp);
-							if ( expty.ty != tyField->ty) {
+							if (!looseTyCompare(expty.ty, tyField->ty)) {
 								EM_error( a->pos,
 									"Type of field %d initialized for record '%s' is incompatible with the declared type",
 									i, S_name(a->u.record.typ));
@@ -284,7 +283,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 			assign_exp = transExp(level, venv, tenv, a->u.assign.exp);
 
 			// #TODO 更完善的类型检查
-			if (actual_ty(var_exp.ty) != actual_ty(assign_exp.ty)){
+			if (actual_ty(var_exp.ty) != NULL && !(looseTyCompare(actual_ty(var_exp.ty), assign_exp.ty))){
 				EM_error(a->pos, "The left and right type is not the same!");
 				//#TODO 错误处理
 				// 当前只返回一个空的语句，不赋值任何内容
@@ -353,7 +352,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 				resexp_ty = expTy(Tr_ifExp(test_exp.exp, true_exp.exp, NULL), Ty_Void());
 			}
 			else {
-				if (true_exp.ty->kind != false_exp.ty->kind){
+				if (!looseTyCompare(true_exp.ty, false_exp.ty)){
 					EM_error(a->pos, "The if...else... statment should return void!");
 				}
 				resexp_ty = expTy(Tr_ifExp(test_exp.exp, true_exp.exp, false_exp.exp), Ty_Void());
@@ -444,6 +443,9 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 			
 			// 逐个声明进行遍历
 			for (d = a->u.let.decs; d; d = d->tail) {
+				 
+			}
+			for (d = a->u.let.decs; d; d = d->tail) {
 				if (d->head != NULL) {
 					te_array[i++] = transDec(level, venv, tenv, d->head);
 				}
@@ -471,7 +473,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 			}
 			struct expty resexpty,ele_expty;
 
-			// 检查数组的长度是否是整数
+			// 检查数组的长度是否是整数 
 			resexpty = transExp(level, venv, tenv, a->u.array.size);
 			if (resexpty.ty->kind != Ty_int){
 				EM_error(a->pos, "The length of the array must be an integer");
@@ -600,7 +602,7 @@ Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
 		// 检测变量类型
 		if (d->u.var.typ != NULL){
 			varDecTy = S_look(tenv, d->u.var.typ);
-			if (varDecTy == NULL){
+			if (varDecTy == NULL || !looseTyCompare(ty, varDecTy)){
 				EM_error(d->pos, 
 					"The initializer of variable '%s' is incompatible with the declared type", S_name(var_sym));
 			}
@@ -880,7 +882,17 @@ Ty_ty actual_ty(Ty_ty ty) {
 	}
 	return ty; //Ty_record, Ty_nil, Ty_int, Ty_string, Ty_array, Ty_void, ~Ty_name~
 }
-
+static bool looseTyCompare(Ty_ty a, Ty_ty b) {
+	Ty_ty _a = actual_ty(a);
+	Ty_ty _b = actual_ty(b);
+	if (_a == _b) {
+		return TRUE;
+	}
+	if (_a->kind == Ty_nil || _b->kind == Ty_nil) {
+		return TRUE;
+	}
+	return FALSE;
+}
 E_enventry E_VarEntry(Tr_access access, Ty_ty ty) {
 	E_enventry entry = checked_malloc(sizeof(*entry));
 	entry->kind = E_varEntry;
