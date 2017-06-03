@@ -69,8 +69,6 @@ S_table E_base_venv();
 
 // IR tree with type check 
 
-
-
 struct expty expTy(Tr_exp exp, Ty_ty ty) {
 	struct expty e;
 	e.exp = exp;
@@ -198,7 +196,7 @@ struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 			Ty_field tyField;
 			struct expty expty;
 			A_exp exp;
-			int arg_number;
+			int arg_number = EXACT_ARGS;
 			ty = S_look(tenv, a->u.record.typ);
 			int i;
 			//1) Check if the record expression's leading ID is a declared record type
