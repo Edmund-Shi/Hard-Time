@@ -117,8 +117,7 @@ A_exp A_SeqExp(A_pos pos, A_expList seq);
 A_exp A_AssignExp(A_pos pos, A_var var, A_exp exp);
 A_exp A_IfExp(A_pos pos, A_exp test, A_exp then, A_exp elsee);
 A_exp A_WhileExp(A_pos pos, A_exp test, A_exp body);
-A_exp A_ForExp(A_pos pos, S_symbol var, A_exp lo, A_exp hi, 
-	A_exp body);
+A_exp A_ForExp(A_pos pos, S_symbol var, A_exp lo, A_exp hi, A_exp body);
 A_exp A_BreakExp(A_pos pos);
 A_exp A_LetExp(A_pos pos, A_decList decs, A_exp body);
 A_exp A_ArrayExp(A_pos pos, S_symbol typ, A_exp size, A_exp init);

@@ -68,8 +68,6 @@ S_table E_base_venv();
 
 // IR tree with type check 
 
-
-
 struct expty expTy(Tr_exp exp, Ty_ty ty) {
 	struct expty e;
 	e.exp = exp;
@@ -614,7 +612,7 @@ Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
 			varDecTy = e.ty;
 		}
 	
-		tr_acc = Tr_allocLocal(level, TRUE);//always escaping
+		tr_acc = Tr_allocLocal(level, d->u.var.escape);//always escaping
 		S_enter(venv, var_sym, E_VarEntry(tr_acc, varDecTy));
 		tr_exp = Tr_assignExp(transVar(level, venv, tenv, A_SimpleVar(d->pos, d->u.var.var)).exp, e.exp);
 		break;
@@ -738,7 +736,7 @@ Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
 				else {
 					resultTy = Ty_Void();
 				}
-
+				
 				//1.3) Solve the formal parameter list
 				formalTys = makeFormalTyList(tenv, head->params);
 
@@ -801,10 +799,7 @@ Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
 					}
 				}
 
-				//2.6) Translate to fragment
-				Tr_procEntryExit(entry->u.fun.level, e.exp, Tr_formals(entry->u.fun.level), entry->u.fun.label);
-
-				//2.7) exit the scope
+				//2.6) exit the scope
 				S_endScope(venv);
 			}
 		}
@@ -995,20 +990,20 @@ Ty_tyList makeFormalTyList(S_table tenv, A_fieldList params) {
 	return tyList_head->head != NULL ? tyList_head : NULL;
 }
 void createEscapeList(U_boolList *formal_escs, A_fieldList fList) {
-	if (fList == NULL) {
-		*formal_escs = NULL;
-		return;
-	}
+	A_fieldList list1;
+	U_boolList list2;
+	list1 = fList;
 
 	U_boolList escs = NULL;
 	U_boolList escs_head = NULL;
-	for (; fList != NULL; fList = fList->tail) {
+
+	for (; list1 != NULL; list1 = list1->tail) {
 		if (escs_head == NULL) {
-			escs = U_BoolList(TRUE, NULL);
+			escs = U_BoolList(list1->head->escape, NULL);
 			escs_head = escs;
 		}
 		else {
-			escs->tail = U_BoolList(TRUE, NULL);
+			escs->tail = U_BoolList(list1->head->escape, NULL);
 			escs = escs->tail;
 		}
 	}

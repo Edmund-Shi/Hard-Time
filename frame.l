@@ -34,8 +34,8 @@ id [A-Za-z][_a-zA-Z0-9]*
 %x comments
 
 %%
-\"  string_buf_ptr = string_buf; BEGIN(str);
-"/*"	{comm_level++; BEGIN(comments); }
+\"  { adjust(); string_buf_ptr = string_buf; BEGIN(str);}
+"/*"	{ adjust(); comm_level++; BEGIN(comments); }
 [ \t]+ 	{ adjust(); }
 [\n] 	{ adjust(); EM_newline();}
 "," 	{ adjust(); return COMMA;}
@@ -89,12 +89,14 @@ while   { adjust(); return WHILE;}
 	return INTT; 
 }
 <str>\" { /* saw closing quote - all done */
-        BEGIN(INITIAL);
+        adjust();
+		BEGIN(INITIAL);
         *string_buf_ptr = '\0';
         yylval.sval = String(string_buf);
         return STRING;
         }
 <str>\n        {
+		adjust();EM_newline();
 		*string_buf_ptr = '\0';
 		EM_error(EM_tokPos,"multiline string is not support:%s",string_buf);
         /* error - unterminated string constant */
@@ -102,32 +104,37 @@ while   { adjust(); return WHILE;}
         }
 
 <str>\\[0-7]{1,3} {
+		adjust();
         /* octal escape sequence */
         int result;
 
         (void) sscanf( yytext + 1, "%o", &result );
 
         if ( result > 0xff )
+			EM_error(EM_tokPos,"Error, constant is out-of-bound"); 
                 /* error, constant is out-of-bounds */
 
         *string_buf_ptr++ = result;
         }
 
 <str>\\[0-9]+ {
+		adjust();
         /* generate error - bad escape sequence; something
          * like '\48' or '\0777777'
          */
+		EM_error(EM_tokPos,"bad escape sequence:%s",yytext);
         }
 
-<str>\\n  *string_buf_ptr++ = '\n';
-<str>\\t  *string_buf_ptr++ = '\t';
-<str>\\r  *string_buf_ptr++ = '\r';
-<str>\\b  *string_buf_ptr++ = '\b';
-<str>\\f  *string_buf_ptr++ = '\f';
+<str>\\n  { adjust(); *string_buf_ptr++ = '\n'; }
+<str>\\t  { adjust(); *string_buf_ptr++ = '\t'; }
+<str>\\r  { adjust(); *string_buf_ptr++ = '\r'; }
+<str>\\b  { adjust(); *string_buf_ptr++ = '\b'; }
+<str>\\f  { adjust(); *string_buf_ptr++ = '\f'; }
 
-<str>\\(.|\n)  *string_buf_ptr++ = yytext[1];
+<str>\\(.|\n)  { adjust(); *string_buf_ptr++ = yytext[1];}
 
 <str>[^\\\n\"]+        {
+		adjust(); 
         char *yptr = yytext;
 
         while ( *yptr )
@@ -135,9 +142,10 @@ while   { adjust(); return WHILE;}
         }
 
 <comments>{
-	"/*"	comm_level ++;
-	"*/"	{comm_level--; if(comm_level==0) BEGIN(INITIAL); }
-	.	/* Do nothing */ ;
+	"/*"	{ adjust(); comm_level ++; }
+	"*/"	{ adjust(); comm_level--; if(comm_level==0) BEGIN(INITIAL); }
+	"\n"    { adjust(); EM_newline(); }	
+	.	/* Do nothing */ adjust();
 }
 . { /*Log("Lex analyse","Unknown token:%s",yytext);*/ EM_error(EM_tokPos,"Unknown token:%s",yytext); }
 

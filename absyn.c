@@ -260,6 +260,7 @@ A_field A_Field(A_pos pos, S_symbol name, S_symbol typ)
 	p->pos = pos;
 	p->name = name;
 	p->typ = typ;
+	//bug
 	p->escape = TRUE;
 	return p;
 }
