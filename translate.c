@@ -236,10 +236,29 @@ Tr_exp Tr_assignExp(Tr_exp lvalue, Tr_exp right) {
 Tr_exp Tr_intExp(int int_val) {
 	return Tr_Ex(T_Const(int_val));
 }
-Tr_exp Tr_stringExp(string str_val) {
-	Temp_label t1 = Temp_newlabel();
-	F_String(t1, str_val);
-	return Tr_Ex(T_Name(t1));
+//Tr_exp Tr_stringExp(string str_val) {
+//	Temp_label t1 = Temp_newlabel();
+//	F_String(t1, str_val);
+//	return Tr_Ex(T_Name(t1));
+//}
+
+Tr_exp Tr_stringExp(string _str) {
+	T_expList list = NULL, head = NULL;
+	char *p = _str;
+	while (*p != '\0') {
+		if (head == NULL) {
+			list = (T_expList)checked_malloc(sizeof(struct T_expList_));
+			head = list;
+		}
+		else {
+			list->tail = (T_expList)checked_malloc(sizeof(struct T_expList_));
+			list = list->tail;
+		}
+		list->head = T_Const((int)(*p));
+		list->tail = NULL;
+		p++;
+	}
+	return Tr_Ex(F_externalCall("initString", head));
 }
 Tr_exp Tr_arithExp(A_oper oper, Tr_exp left, Tr_exp right) {
 	switch (oper) {

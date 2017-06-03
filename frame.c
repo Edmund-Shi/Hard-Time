@@ -144,7 +144,7 @@ F_frame F_newFrame(Temp_label name, U_boolList formals) {
 	U_boolList par = formals;
 	F_access acc = NULL;
 	while (par != NULL) {
-		if (par->head != NULL) {
+		if (par->head == TRUE) {
 			acc = InFrame(frame->offset);//#bug offset可能要取绝对值
 			frame->offset -= F_wordSize;
 		}

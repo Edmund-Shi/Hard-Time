@@ -58,9 +58,9 @@ void traverseDec(A_dec dec) {
 		}
 	}
 	else if (dec->kind == A_varDec) {
-		if (dec->u.var.init->kind == A_arrayExp)
-			dec->u.var.escape = TRUE;
 		S_enter(environment, dec->u.var.var, e_entry(depth, &dec->u.var.escape));
+		if (dec->u.var.init->kind == A_arrayExp || dec->u.var.init->kind == A_stringExp)
+			dec->u.var.escape = TRUE;
 		traverseExp(dec->u.var.init);
 
 	}
