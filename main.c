@@ -5,6 +5,7 @@
 #include "log.h"
 #include "semant.h"
 #include "prabsyn.h"
+#include "escape.h"
 
 extern int yyparse();
 A_exp root;
@@ -20,6 +21,9 @@ int main(void){
 	ClearLog();
 	openLog(); /*open log at the beginnig and colse it before exit*/
 	yyparse();
+	
+	Esc_findEscape(root);
+	
 	T_stm result;
 	result = SEM_transProg(root);
 	T_stmList list = T_StmList(result, NULL);

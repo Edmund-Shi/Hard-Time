@@ -208,12 +208,7 @@ F_fragList F_FragList(F_frag head, F_fragList tail) {
 
 //?? 下面有问题
 /*
-static F_fragList *fragList = NULL;
-static F_fragList fragList_head = NULL;
-void F_String(Temp_label label, F_frame frame);
-void F_Proc(T_stm body, F_frame frame);
-F_fragList F_getFragList(void) {
-	return fragList_head;
+
 }
 */
 static F_fragList *fragList = NULL;

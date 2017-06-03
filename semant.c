@@ -983,20 +983,20 @@ Ty_tyList makeFormalTyList(S_table tenv, A_fieldList params) {
 	return tyList_head->head != NULL ? tyList_head : NULL;
 }
 void createEscapeList(U_boolList *formal_escs, A_fieldList fList) {
-	if (fList == NULL) {
-		*formal_escs = NULL;
-		return;
-	}
+	A_fieldList list1;
+	U_boolList list2;
+	list1 = fList;
 
 	U_boolList escs = NULL;
 	U_boolList escs_head = NULL;
-	for (; fList != NULL; fList = fList->tail) {
+
+	for (; list1 != NULL; list1 = list1->tail) {
 		if (escs_head == NULL) {
-			escs = U_BoolList(TRUE, NULL);
+			escs = U_BoolList(list1->head->escape, NULL);
 			escs_head = escs;
 		}
 		else {
-			escs->tail = U_BoolList(TRUE, NULL);
+			escs->tail = U_BoolList(list1->head->escape, NULL);
 			escs = escs->tail;
 		}
 	}
