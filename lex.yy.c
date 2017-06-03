@@ -981,6 +981,7 @@ YY_RULE_SETUP
         (void) sscanf( yytext + 1, "%o", &result );
 
         if ( result > 0xff )
+			EM_error(EM_tokPos,"Error, constant is out-of-bound"); 
                 /* error, constant is out-of-bounds */
 
         *string_buf_ptr++ = result;
@@ -988,7 +989,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 119 "frame.l"
+#line 120 "frame.l"
 {
 		adjust();
         /* generate error - bad escape sequence; something
@@ -999,37 +1000,37 @@ YY_RULE_SETUP
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 127 "frame.l"
+#line 128 "frame.l"
 { adjust(); *string_buf_ptr++ = '\n'; }
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 128 "frame.l"
+#line 129 "frame.l"
 { adjust(); *string_buf_ptr++ = '\t'; }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 129 "frame.l"
+#line 130 "frame.l"
 { adjust(); *string_buf_ptr++ = '\r'; }
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 130 "frame.l"
+#line 131 "frame.l"
 { adjust(); *string_buf_ptr++ = '\b'; }
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 131 "frame.l"
+#line 132 "frame.l"
 { adjust(); *string_buf_ptr++ = '\f'; }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 133 "frame.l"
+#line 134 "frame.l"
 { adjust(); *string_buf_ptr++ = yytext[1];}
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 135 "frame.l"
+#line 136 "frame.l"
 {
 		adjust(); 
         char *yptr = yytext;
@@ -1041,36 +1042,36 @@ YY_RULE_SETUP
 
 case 58:
 YY_RULE_SETUP
-#line 144 "frame.l"
+#line 145 "frame.l"
 { adjust(); comm_level ++; }
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 145 "frame.l"
+#line 146 "frame.l"
 { adjust(); comm_level--; if(comm_level==0) BEGIN(INITIAL); }
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 146 "frame.l"
+#line 147 "frame.l"
 { adjust(); EM_newline(); }	
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 147 "frame.l"
+#line 148 "frame.l"
 /* Do nothing */ adjust();
 	YY_BREAK
 
 case 62:
 YY_RULE_SETUP
-#line 149 "frame.l"
+#line 150 "frame.l"
 { /*Log("Lex analyse","Unknown token:%s",yytext);*/ EM_error(EM_tokPos,"Unknown token:%s",yytext); }
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 151 "frame.l"
+#line 152 "frame.l"
 ECHO;
 	YY_BREAK
-#line 1074 "lex.yy.c"
+#line 1075 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(str):
 case YY_STATE_EOF(comments):
@@ -1958,5 +1959,5 @@ int main()
 	return 0;
 	}
 #endif
-#line 151 "frame.l"
+#line 152 "frame.l"
 

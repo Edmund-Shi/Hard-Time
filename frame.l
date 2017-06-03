@@ -111,6 +111,7 @@ while   { adjust(); return WHILE;}
         (void) sscanf( yytext + 1, "%o", &result );
 
         if ( result > 0xff )
+			EM_error(EM_tokPos,"Error, constant is out-of-bound"); 
                 /* error, constant is out-of-bounds */
 
         *string_buf_ptr++ = result;
