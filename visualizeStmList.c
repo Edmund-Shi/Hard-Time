@@ -156,6 +156,7 @@ void visualStmList(FILE * out, T_stmList stmList)
 {
 	init(out);
 	for (; stmList;stmList = stmList->tail) {
+		genLabel(out,0,"start");
 		vis_stm(out, stmList->head, 0);
 	}
 	finish(out);
