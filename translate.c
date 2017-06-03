@@ -344,11 +344,7 @@ Tr_exp Tr_logicExp(A_oper oper, Tr_exp left, Tr_exp right, bool isStrCompare) {
 	fl = PatchList(&stm->u.CJUMP.false, NULL);
 	return Tr_Cx(tl, fl, stm);
 }
-void Tr_procEntryExit(Tr_level level, Tr_exp body, Tr_accessList formals, Temp_label label) {
-	T_stm stm;
-	stm = T_Seq(T_Label(label), T_Move(T_Temp(F_RV()), unEx(body)));
-	F_Proc(stm, level->frame);
-}
+
 Tr_exp Tr_callExp(Tr_level caller_lvl, Tr_level callee_lvl, Temp_label fun_label, Tr_exp* argv, int args) {
 	int z = 0, cnt = 0;
 	T_exp slk;

@@ -28,21 +28,8 @@ static stack_node variant_list = NULL;//variant_node
 static bool pointerCompare(void *a, void *b) {
 	return a == b ? TRUE : FALSE;
 }
-static void VL_push(S_symbol sym) {
-	GS_push(&variant_list, sym);
-}
-static void VL_pop() {
-	GS_pop(&variant_list);
-}
-static bool VL_check(S_symbol sym) {
-	return GS_check(variant_list, sym, pointerCompare);
-}
-static bool VL_isEmpty() {
-	return variant_list == NULL;
-}
-/* Loop variants END */
 
-/* Symbol list (for generic use) START */
+/* Symbol list START */
 static void SL_push(S_symbol sym);
 static void SL_pop();
 static bool SL_check(S_symbol sym);
@@ -62,7 +49,21 @@ static bool SL_check(S_symbol sym) {
 static void SL_empty() {
 	GS_empty(&symbol_list);
 }
-/* Symbol list (for generic use) END */
+/* Symbol list END */
+
+static void VL_push(S_symbol sym) {
+	GS_push(&variant_list, sym);
+}
+static void VL_pop() {
+	GS_pop(&variant_list);
+}
+static bool VL_check(S_symbol sym) {
+	return GS_check(variant_list, sym, pointerCompare);
+}
+static bool VL_isEmpty() {
+	return variant_list == NULL;
+}
+
 
 S_table E_base_tenv();
 S_table E_base_venv();
@@ -76,15 +77,17 @@ struct expty expTy(Tr_exp exp, Ty_ty ty) {
 	return e;
 }
 
-// global dummy node
+// 全局的虚结点头
 static struct expty *dummy_expty_p;
-Tr_level Tr_getParent(Tr_level level) {
-	return level->parent;
-}
+
 void init() {
 	dummy_expty_p = (struct expty*) checked_malloc(sizeof(struct expty));
 	dummy_expty_p->exp = Tr_voidExp();
 	dummy_expty_p->ty = Ty_Void();
+}
+
+Tr_level Tr_getParent(Tr_level level) {
+	return level->parent;
 }
 
 T_stm SEM_transProg(A_exp exp){
@@ -113,26 +116,25 @@ T_stm SEM_transProg(A_exp exp){
 struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a){
 	string TAG = "TRANSEXP";
 	if (a == NULL){
-		// Log(TAG, "The exp for trasnExp is NULL."); // not an error
 		return *dummy_expty_p;
 	}
 
 	Tr_exp te; // 总的表达式
-	switch (a->kind){
-		case A_intExp:{
-			te = Tr_intExp(a->u.intt);
-			return expTy(te, Ty_Int());
-		}
+	switch (a->kind){		
 		case A_varExp: {
 			return transVar(level, venv, tenv, a->u.var);
+		}
+		case A_stringExp: {
+			te = Tr_stringExp(a->u.stringg);
+			return expTy(te, Ty_String());
 		}
 		case A_nilExp: {
 			te = Tr_nilExp();
 			return expTy(te,Ty_Nil());
 		}
-		case A_stringExp: {
-			te = Tr_stringExp(a->u.stringg);
-			return expTy(te, Ty_String());
+		case A_intExp:{
+			te = Tr_intExp(a->u.intt);
+			return expTy(te, Ty_Int());
 		}
 		case A_callExp: {
 			Ty_tyList formals;
@@ -808,11 +810,8 @@ Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
 				entry = S_look(venv, head->name);
 				formalTys = entry->u.fun.formals;
 
-				//2.2) start new scope
+				// 添加变量到新的环境中
 				S_beginScope(venv);
-
-				//2.3) add all parameters to venv as declared variables
-				//Use tail here since the first argument is the static link.
 				tr_formals = Tr_formals(entry->u.fun.level)->tail;
 				for (fList = head->params, tList = formalTys; fList != NULL;
 				fList = fList->tail, tList = tList->tail, tr_formals = tr_formals->tail) {
@@ -847,9 +846,6 @@ Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
 							S_name(head->name));
 					}
 				}
-
-				//2.6) Translate to fragment
-				Tr_procEntryExit(entry->u.fun.level, e.exp, Tr_formals(entry->u.fun.level), entry->u.fun.label);
 
 				//2.7) exit the scope
 				S_endScope(venv);
