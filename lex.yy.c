@@ -282,16 +282,16 @@ static void yy_fatal_error YY_PROTO(( yyconst char msg[] ));
 	*yy_cp = '\0'; \
 	yy_c_buf_p = yy_cp;
 
-#define YY_NUM_RULES 62
-#define YY_END_OF_BUFFER 63
+#define YY_NUM_RULES 63
+#define YY_END_OF_BUFFER 64
 static yyconst short int yy_accept[119] =
     {   0,
-        0,    0,    0,    0,    0,    0,   63,   61,    3,    4,
+        0,    0,    0,    0,    0,    0,   64,   62,    3,    4,
         1,   26,    9,   10,   18,   16,    5,   17,   15,   19,
        46,    8,    7,   23,   20,   25,   45,   13,   14,   45,
        45,   45,   45,   45,   45,   45,   45,   45,   45,   45,
-       45,   11,   27,   12,   57,   48,   47,   62,   60,   62,
-       60,   60,    3,    2,   46,    6,   22,   21,   24,   45,
+       45,   11,   27,   12,   57,   48,   47,   63,   61,   60,
+       61,   61,    3,    2,   46,    6,   22,   21,   24,   45,
        45,   45,   30,   45,   45,   45,   45,   35,   36,   45,
        45,   38,   45,   41,   45,   45,   45,   57,   56,   49,
        50,   54,   55,   51,   53,   52,   59,   58,   45,   45,
@@ -713,12 +713,12 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 YY_RULE_SETUP
 #line 37 "frame.l"
-string_buf_ptr = string_buf; BEGIN(str);
+{ adjust(); string_buf_ptr = string_buf; BEGIN(str);}
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
 #line 38 "frame.l"
-{comm_level++; BEGIN(comments); }
+{ adjust(); comm_level++; BEGIN(comments); }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
@@ -952,7 +952,8 @@ case 47:
 YY_RULE_SETUP
 #line 91 "frame.l"
 { /* saw closing quote - all done */
-        BEGIN(INITIAL);
+        adjust();
+		BEGIN(INITIAL);
         *string_buf_ptr = '\0';
         yylval.sval = String(string_buf);
         return STRING;
@@ -960,8 +961,9 @@ YY_RULE_SETUP
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 97 "frame.l"
+#line 98 "frame.l"
 {
+		adjust();EM_newline();
 		*string_buf_ptr = '\0';
 		EM_error(EM_tokPos,"multiline string is not support:%s",string_buf);
         /* error - unterminated string constant */
@@ -970,8 +972,9 @@ YY_RULE_SETUP
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 104 "frame.l"
+#line 106 "frame.l"
 {
+		adjust();
         /* octal escape sequence */
         int result;
 
@@ -985,47 +988,50 @@ YY_RULE_SETUP
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 116 "frame.l"
+#line 119 "frame.l"
 {
+		adjust();
         /* generate error - bad escape sequence; something
          * like '\48' or '\0777777'
          */
+		EM_error(EM_tokPos,"bad escape sequence:%s",yytext);
         }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 122 "frame.l"
-*string_buf_ptr++ = '\n';
+#line 127 "frame.l"
+{ adjust(); *string_buf_ptr++ = '\n'; }
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 123 "frame.l"
-*string_buf_ptr++ = '\t';
+#line 128 "frame.l"
+{ adjust(); *string_buf_ptr++ = '\t'; }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 124 "frame.l"
-*string_buf_ptr++ = '\r';
+#line 129 "frame.l"
+{ adjust(); *string_buf_ptr++ = '\r'; }
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 125 "frame.l"
-*string_buf_ptr++ = '\b';
+#line 130 "frame.l"
+{ adjust(); *string_buf_ptr++ = '\b'; }
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 126 "frame.l"
-*string_buf_ptr++ = '\f';
+#line 131 "frame.l"
+{ adjust(); *string_buf_ptr++ = '\f'; }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 128 "frame.l"
-*string_buf_ptr++ = yytext[1];
+#line 133 "frame.l"
+{ adjust(); *string_buf_ptr++ = yytext[1];}
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 130 "frame.l"
+#line 135 "frame.l"
 {
+		adjust(); 
         char *yptr = yytext;
 
         while ( *yptr )
@@ -1035,31 +1041,36 @@ YY_RULE_SETUP
 
 case 58:
 YY_RULE_SETUP
-#line 138 "frame.l"
-comm_level ++;
+#line 144 "frame.l"
+{ adjust(); comm_level ++; }
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 139 "frame.l"
-{comm_level--; if(comm_level==0) BEGIN(INITIAL); }
+#line 145 "frame.l"
+{ adjust(); comm_level--; if(comm_level==0) BEGIN(INITIAL); }
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 140 "frame.l"
-/* Do nothing */ ;
+#line 146 "frame.l"
+{ adjust(); EM_newline(); }	
 	YY_BREAK
-
 case 61:
 YY_RULE_SETUP
-#line 142 "frame.l"
-{ /*Log("Lex analyse","Unknown token:%s",yytext);*/ EM_error(EM_tokPos,"Unknown token:%s",yytext); }
+#line 147 "frame.l"
+/* Do nothing */ adjust();
 	YY_BREAK
+
 case 62:
 YY_RULE_SETUP
-#line 144 "frame.l"
+#line 149 "frame.l"
+{ /*Log("Lex analyse","Unknown token:%s",yytext);*/ EM_error(EM_tokPos,"Unknown token:%s",yytext); }
+	YY_BREAK
+case 63:
+YY_RULE_SETUP
+#line 151 "frame.l"
 ECHO;
 	YY_BREAK
-#line 1063 "lex.yy.c"
+#line 1074 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(str):
 case YY_STATE_EOF(comments):
@@ -1947,5 +1958,5 @@ int main()
 	return 0;
 	}
 #endif
-#line 144 "frame.l"
+#line 151 "frame.l"
 
