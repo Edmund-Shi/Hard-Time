@@ -155,7 +155,7 @@ Tr_exp Tr_simpleVar(Tr_access _ac, Tr_level _le) {
 		exp = F_Exp(access, T_Temp(F_FP()));
 	}
 	else {
-		exp = F_exp(F_staticLink(), T_Temp(F_FP()));
+		exp = F_Exp(F_staticLink(), T_Temp(F_FP()));
 		_le = _le->parent;
 		while (_le != _ac->level) {
 			_le = _le->parent;
@@ -201,13 +201,19 @@ Tr_exp Tr_ifExp(Tr_exp _cond, Tr_exp _t, Tr_exp _f) {
 }
 //对于字符串的处理
 Tr_exp Tr_stringExp(string _str) {
-	T_expList list = (T_expList)checked_malloc(sizeof(struct T_expList_));
-	T_expList head = list;
+	T_expList list = NULL, head = NULL;
 	char *p = _str;
 	while (*p != '\0') {
-		list->head = T_Const((int)*p);
-		list->tail = (Tr_exp)checked_malloc(sizeof(struct T_expList_));
-		list = list->tail;
+		if (head == NULL) {
+			list = (T_expList)checked_malloc(sizeof(struct T_expList_));
+			head = list;
+		}
+		else {
+			list->tail = (T_expList)checked_malloc(sizeof(struct T_expList_));
+			list = list->tail;
+		}
+		list->head = T_Const((int)(*p));
+		list->tail = NULL;
 		p++;
 	}
 	return Tr_Ex(F_externalCall("initString", head));

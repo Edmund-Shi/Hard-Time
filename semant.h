@@ -5,6 +5,10 @@
 #include "absyn.h"
 #include "translate.h"
 
+#define EXACT_ARGS 0
+#define LESS_ARGS 1
+#define MORE_ARGS 2
+
 typedef struct E_enventry_ *E_enventry;
 struct E_enventry_ {
 	enum { E_varEntry, E_funEntry }kind ;
@@ -29,7 +33,8 @@ struct expty {
 E_enventry E_VarEntry(Tr_access, Ty_ty);
 E_enventry E_FunEntry(Tr_level, Temp_label, Ty_tyList, Ty_ty);
 
-// #bug 可能存在问题
+// 接口函数，生成中间代码
 T_stm SEM_transProg(A_exp exp);
+
 
 #endif /* end ifnedf SEMANT_H_ */ 
