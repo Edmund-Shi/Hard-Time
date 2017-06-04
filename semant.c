@@ -176,7 +176,7 @@ struct expty transExp(Tr_level _level, S_table _venv, S_table _tenv, A_exp _exp)
 				A_exp exp = args->head;
 				if (exp != NULL && ty != NULL) {
 					struct expty expty = transExp(_level, _venv, _tenv, exp);
-					if (actual_ty(expty.ty) != actual_ty(ty)) EM_error(exp->pos, "Type of argument %d passed to function '%s' is incompatible with the declared type", i + 1, S_name(_exp->u.call.func));
+					if (! looseTyCompare(actual_ty(expty.ty), actual_ty(ty))) EM_error(exp->pos, "Type of argument %d passed to function '%s' is incompatible with the declared type\n", i + 1, S_name(_exp->u.call.func));
 					//将参数放到参数链表中
 					arg_exps[i] = expty.exp;
 				}
@@ -193,14 +193,14 @@ struct expty transExp(Tr_level _level, S_table _venv, S_table _tenv, A_exp _exp)
 			else if (formals == NULL && args != NULL) {
 				if (args->head != NULL) arg_number = MORE_ARGS;
 			}
-			if (arg_number == MORE_ARGS) EM_error(_exp->pos, "More than necessary arguments are passed to function '%s'", S_name(_exp->u.call.func));
-			else if (arg_number == LESS_ARGS) EM_error(_exp->pos, "Less than necessary arguments are passed to function '%s'", S_name(_exp->u.call.func));
+			if (arg_number == MORE_ARGS) EM_error(_exp->pos, "More than necessary arguments are passed to function '%s'\n", S_name(_exp->u.call.func));
+			else if (arg_number == LESS_ARGS) EM_error(_exp->pos, "Less than necessary arguments are passed to function '%s'\n", S_name(_exp->u.call.func));
 			// Generate IR tree
 			te = Tr_callExp(_level, Tr_getParent(entry->u.fun.level), entry->u.fun.label, arg_exps, i);
 			free(arg_exps);
 			return expTy(te, entry->u.fun.result);
 		}
-		else EM_error(_exp->pos, "Undefined function: %s", S_name(_exp->u.call.func));
+		else EM_error(_exp->pos, "Undefined function: %s\n", S_name(_exp->u.call.func));
 	}
 	case A_opExp: {
 		struct expty lexpty, rexpty;
@@ -213,17 +213,17 @@ struct expty transExp(Tr_level _level, S_table _venv, S_table _tenv, A_exp _exp)
 		switch (oper) {
 		case A_plusOp:case A_minusOp:case A_timesOp:case A_divideOp:
 			// 操作符必须是整型
-			if (rty->kind != Ty_int) EM_error(_exp->pos, "The right part of binary operation must be an integer!");
-			if (lty->kind != Ty_int) EM_error(_exp->pos, "The left part of binary operation must be an integer!");
+			if (rty->kind != Ty_int) EM_error(_exp->pos, "The right part of binary operation must be an integer!\n");
+			if (lty->kind != Ty_int) EM_error(_exp->pos, "The left part of binary operation must be an integer!\n");
 			return expTy(Tr_arithExp(oper, lexpty.exp, rexpty.exp), Ty_Int());
 		case A_ltOp:case A_leOp:case A_gtOp:case A_geOp:
 			// 操作符也必须是整形
-			if (rty->kind != Ty_int) EM_error(_exp->pos, "The right part of binary operation must be an integer!");
-			if (lty->kind != Ty_int) EM_error(_exp->pos, "The left part of binary operation must be an integer!");
+			if (rty->kind != Ty_int) EM_error(_exp->pos, "The right part of binary operation must be an integer!\n");
+			if (lty->kind != Ty_int) EM_error(_exp->pos, "The left part of binary operation must be an integer!\n");
 			return expTy(Tr_logicExp(oper, lexpty.exp, rexpty.exp, FALSE), Ty_Int());
 		case A_eqOp:case A_neqOp:
 			// #bug 除了基本类型以外的类型的比较可能会出现bug
-			if (rty->kind != lty->kind) EM_error(_exp->pos, "The left part and the right part should be the same type!");
+			if (rty->kind != lty->kind) EM_error(_exp->pos, "The left part and the right part should be the same type!\n");
 			else if (lty->kind == Ty_string) te = Tr_logicExp(oper, lexpty.exp, rexpty.exp, TRUE);
 			else te = Tr_logicExp(oper, lexpty.exp, rexpty.exp, FALSE);
 			return expTy(te, Ty_Int());
@@ -253,11 +253,11 @@ struct expty transExp(Tr_level _level, S_table _venv, S_table _tenv, A_exp _exp)
 				tyList = tyList->tail, efList = efList->tail, i++) {
 				tyField = tyList->head;	efield = efList->head;
 				if (tyField != NULL && efield != NULL) {
-					if (tyField->name != efield->name) EM_error(efield->exp->pos, "The field %d initialized for record '%s' is inconsistent with the declared field's name '%s'", i, S_name(_exp->u.record.typ), S_name(tyField->name));
+					if (tyField->name != efield->name) EM_error(efield->exp->pos, "The field %d initialized for record '%s' is inconsistent with the declared field's name '%s'\n", i, S_name(_exp->u.record.typ), S_name(tyField->name));
 					else {
 						// 校验声明
 						expty = transExp(_level, _venv, _tenv, efield->exp);
-						if (expty.ty != tyField->ty) EM_error(_exp->pos, "Type of field %d initialized for record '%s' is incompatible with the declared type", i, S_name(_exp->u.record.typ));
+						if (expty.ty != tyField->ty) EM_error(_exp->pos, "Type of field %d initialized for record '%s' is incompatible with the declared type\n", i, S_name(_exp->u.record.typ));
 						// 初始化记录值
 						Tr_recordExp_app(te, expty.exp, i == cnt ? TRUE : FALSE);//Initialize next field
 					}
@@ -273,12 +273,12 @@ struct expty transExp(Tr_level _level, S_table _venv, S_table _tenv, A_exp _exp)
 				}
 			}
 
-			if (arg_number == MORE_ARGS) EM_error(_exp->pos, "More than necessary fields are initialized for record '%s'", S_name(_exp->u.record.typ));
-			else if (arg_number == LESS_ARGS || (tyList != NULL && tyList->head != NULL)) EM_error(_exp->pos, "Less than necessary fields are initialized for record '%s'", S_name(_exp->u.record.typ));
+			if (arg_number == MORE_ARGS) EM_error(_exp->pos, "More than necessary fields are initialized for record '%s'\n", S_name(_exp->u.record.typ));
+			else if (arg_number == LESS_ARGS || (tyList != NULL && tyList->head != NULL)) EM_error(_exp->pos, "Less than necessary fields are initialized for record '%s'\n", S_name(_exp->u.record.typ));
 			// 直接返回结果
 			return expTy(te, ty);
 		}
-		else EM_error(_exp->pos, "Undefined type '%s'", S_name(_exp->u.record.typ));
+		else EM_error(_exp->pos, "Undefined type '%s'\n", S_name(_exp->u.record.typ));
 		break;
 	}
 	case A_assignExp: {
@@ -289,7 +289,7 @@ struct expty transExp(Tr_level _level, S_table _venv, S_table _tenv, A_exp _exp)
 		lexp = transVar(_level, _venv, _tenv, _exp->u.assign.var);
 		rexp = transExp(_level, _venv, _tenv, _exp->u.assign.exp);
 		if (actual_ty(lexp.ty) != actual_ty(rexp.ty)) {
-			EM_error(_exp->pos, "The left and right type is not the same!");
+			EM_error(_exp->pos, "The left and right type is not the same!\n");
 			// 当前只返回一个空的语句，不赋值任何内容
 			return expTy(Tr_assignExp(lexp.exp, NULL), Ty_Void());
 		}
@@ -325,7 +325,7 @@ struct expty transExp(Tr_level _level, S_table _venv, S_table _tenv, A_exp _exp)
 	case A_ifExp: {
 		// 首先翻译测试条件判断语句
 		struct expty cond = transExp(_level, _venv, _tenv, _exp->u.iff.test);
-		if (actual_ty(cond.ty)->kind != Ty_int) EM_error(_exp->u.iff.test->pos, "The TEST expression is not a number");
+		if (actual_ty(cond.ty)->kind != Ty_int) EM_error(_exp->u.iff.test->pos, "The TEST expression is not a number\n");
 		// 翻译正确分支
 		struct expty trueExp = transExp(_level, _venv, _tenv, _exp->u.iff.then);
 		// 翻译错误分支
@@ -339,11 +339,11 @@ struct expty transExp(Tr_level _level, S_table _venv, S_table _tenv, A_exp _exp)
 		// 测试类型是否一致
 		struct expty resexp_ty;
 		if (!isElse) {
-			if (trueExp.ty->kind != Ty_void) EM_error(_exp->pos, "The if statment should return void!");
+			if (trueExp.ty->kind != Ty_void) EM_error(_exp->pos, "The if statment should return void!\n");
 			resexp_ty = expTy(Tr_ifExp(cond.exp, trueExp.exp, NULL), Ty_Void());
 		}
 		else {
-			if (trueExp.ty->kind != falseExp.ty->kind) EM_error(_exp->pos, "The if...else... statment should return void!");
+			if (trueExp.ty->kind != falseExp.ty->kind) EM_error(_exp->pos, "The if...else... statment should return void!\n");
 			resexp_ty = expTy(Tr_ifExp(cond.exp, trueExp.exp, falseExp.exp), Ty_Void());
 		}
 		return resexp_ty;
@@ -354,9 +354,9 @@ struct expty transExp(Tr_level _level, S_table _venv, S_table _tenv, A_exp _exp)
 		Tr_genLoopDoneLabel(); // break的时候可以跳转至此处
 		struct expty condExp, bodyExp;
 		condExp = transExp(_level, _venv, _tenv, _exp->u.whilee.test);
-		if (actual_ty(condExp.ty)->kind != Ty_int) EM_error(_exp->pos, "The test exp in WHILE statment must return an INT value.");
+		if (actual_ty(condExp.ty)->kind != Ty_int) EM_error(_exp->pos, "The test exp in WHILE statment must return an INT value.\n");
 		bodyExp = transExp(_level, _venv, _tenv, _exp->u.whilee.body);
-		if (actual_ty(bodyExp.ty)->kind != Ty_void) EM_error(_exp->pos, "The body of WHILE statment must return void");
+		if (actual_ty(bodyExp.ty)->kind != Ty_void) EM_error(_exp->pos, "The body of WHILE statment must return void\n");
 		// while 语句结束，进行pop
 		VL_pop();
 		return expTy(Tr_whileExp(condExp.exp, bodyExp.exp), Ty_Void());
@@ -366,7 +366,7 @@ struct expty transExp(Tr_level _level, S_table _venv, S_table _tenv, A_exp _exp)
 		S_beginScope(_venv);
 		// 检查循环变量是否在外界被使用，如果是，那么就报错，否则压入循环的堆栈
 		S_symbol var_sym = _exp->u.forr.var;
-		if (VL_check(var_sym)) EM_error(_exp->pos, "The name '%s' has been used in the outer variables", S_name(var_sym));
+		if (VL_check(var_sym)) EM_error(_exp->pos, "The name '%s' has been used in the outer variables\n", S_name(var_sym));
 		else VL_push(var_sym);
 		Tr_genLoopDoneLabel(); // break的时候可以跳转至此处
 							   //计算上限和下限
@@ -374,7 +374,7 @@ struct expty transExp(Tr_level _level, S_table _venv, S_table _tenv, A_exp _exp)
 		lowExp = transExp(_level, _venv, _tenv, _exp->u.forr.lo);
 		highExp = transExp(_level, _venv, _tenv, _exp->u.forr.hi);
 		if (actual_ty(lowExp.ty)->kind != Ty_int || actual_ty(highExp.ty)->kind != Ty_int)
-			EM_error(_exp->pos, "The FOR expression must be integer");
+			EM_error(_exp->pos, "The FOR expression must be integer\n");
 		// 进入新的变量环境
 		Tr_access tr_acc = Tr_allocLocal(_level, FALSE);
 		S_enter(_venv, var_sym, E_VarEntry(tr_acc, Ty_Int()));
@@ -382,14 +382,14 @@ struct expty transExp(Tr_level _level, S_table _venv, S_table _tenv, A_exp _exp)
 		varExp = transVar(_level, _venv, _tenv, A_SimpleVar(_exp->pos, var_sym));
 		bodyExp = transExp(_level, _venv, _tenv, _exp->u.forr.body);
 		if (actual_ty(bodyExp.ty)->kind != Ty_void)
-			EM_error(_exp->u.forr.body->pos, "Value return form FOR stm should be void");
+			EM_error(_exp->u.forr.body->pos, "Value return form FOR stm should be void\n");
 		// 离开环境
 		VL_pop();
 		S_endScope(_venv);
 		return expTy(Tr_forExp(varExp.exp, lowExp.exp, highExp.exp, bodyExp.exp), Ty_Void());
 	}
 	case A_breakExp: {
-		if (VL_isEmpty()) EM_error(_exp->pos, "BREAK only avialiable in loop structure.");
+		if (VL_isEmpty()) EM_error(_exp->pos, "BREAK only avialiable in loop structure.\n");
 		return expTy(Tr_breakExp(), Ty_Void());
 	}
 	case A_letExp: {
@@ -421,13 +421,13 @@ struct expty transExp(Tr_level _level, S_table _venv, S_table _tenv, A_exp _exp)
 		Ty_ty ty = S_look(_tenv, _exp->u.array.typ);
 		if (ty != NULL) {
 			ty = actual_ty(ty);
-			if (ty->kind != Ty_array) EM_error(_exp->pos, "The type need to be an array");
+			if (ty->kind != Ty_array) EM_error(_exp->pos, "The type need to be an array\n");
 		}
-		else EM_error(_exp->pos, "Array type doesn't exist");
+		else EM_error(_exp->pos, "Array type doesn't exist\n");
 		struct expty resexpty, ele_expty;
 		// 检查数组的长度是否是整数
 		resexpty = transExp(_level, _venv, _tenv, _exp->u.array.size);
-		if (resexpty.ty->kind != Ty_int) EM_error(_exp->pos, "The length of the array must be an integer");
+		if (resexpty.ty->kind != Ty_int) EM_error(_exp->pos, "The length of the array must be an integer\n");
 		ele_expty = transExp(_level, _venv, _tenv, _exp->u.array.init);
 		return expTy(Tr_arrayExp(resexpty.exp, ele_expty.exp), ty);
 	}
@@ -445,7 +445,7 @@ void transTy(S_table _tenv, S_symbol _sym, A_ty a) {
 	case A_nameTy: {
 		S_symbol sym = a->u.name;
 		Ty_ty ty = S_look(_tenv, sym);
-		if (ty == NULL)	EM_error(a->pos, "Undefined type: %s", S_name(sym));
+		if (ty == NULL)	EM_error(a->pos, "Undefined type: %s\n", S_name(sym));
 		else this_ty->u.name.ty = ty;
 		break;
 	}
@@ -455,7 +455,7 @@ void transTy(S_table _tenv, S_symbol _sym, A_ty a) {
 			if (head == NULL) continue;
 			S_symbol sym = head->typ;
 			Ty_ty ty = S_look(_tenv, sym);
-			if (ty == NULL)	EM_error(a->pos, "Undefined type: %s", S_name(sym));
+			if (ty == NULL)	EM_error(a->pos, "Undefined type: %s\n", S_name(sym));
 			else {
 				tyList->tail = Ty_FieldList(NULL, NULL);
 				tyList->head = Ty_Field(head->name, ty);
@@ -469,7 +469,7 @@ void transTy(S_table _tenv, S_symbol _sym, A_ty a) {
 	case A_arrayTy: {
 		S_symbol sym = a->u.array;
 		Ty_ty ty = S_look(_tenv, sym);
-		if (ty == NULL)	EM_error(a->pos, "Undefined type: %s", S_name(sym));
+		if (ty == NULL)	EM_error(a->pos, "Undefined type: %s\n", S_name(sym));
 		else this_ty->u.array = ty;
 		break;
 	}
@@ -485,14 +485,14 @@ struct expty transVar(Tr_level _level, S_table _venv, S_table _tenv, A_var _var)
 			te = Tr_simpleVar(entry->u.var.access, _level);
 			return expTy(te, actual_ty(entry->u.var.ty));
 		}
-		else EM_error(_var->pos, "Undefined variable: %s", S_name(_var->u.simple));
+		else EM_error(_var->pos, "Undefined variable: %s\n", S_name(_var->u.simple));
 		break;
 	}
 	case A_fieldVar: {
 		Ty_fieldList fList;
 		Ty_field field;
 		struct expty exp = transVar(_level, _venv, _tenv, _var->u.field.var);
-		if (exp.ty->kind != Ty_record) EM_error(_var->pos, "Field access to a non-record variable");
+		if (exp.ty->kind != Ty_record) EM_error(_var->pos, "Field access to a non-record variable\n");
 		int offset = 0;
 		for (fList = exp.ty->u.record; fList != NULL; fList = fList->tail, offset++) {
 			field = fList->head;
@@ -501,20 +501,20 @@ struct expty transVar(Tr_level _level, S_table _venv, S_table _tenv, A_var _var)
 				return expTy(te, actual_ty(field->ty));
 			}
 		}
-		EM_error(_var->pos, "Undefined field '%s' in record variable", S_name(_var->u.field.sym));
+		EM_error(_var->pos, "Undefined field '%s' in record variable\n", S_name(_var->u.field.sym));
 		break;
 	}
 	case A_subscriptVar: {
 		// 数组的遍历
 		struct expty lexp = transVar(_level, _venv, _tenv, _var->u.subscript.var);
 		if (lexp.ty->kind != Ty_array) {
-			EM_error(_var->pos, "Indexed access to a non-array variable");
+			EM_error(_var->pos, "Indexed access to a non-array variable\n");
 			break;
 		}
 		// 检查整数
 		struct expty rexp = transExp(_level, _venv, _tenv, _var->u.subscript.exp);
 		if (rexp.ty->kind != Ty_int) {
-			EM_error(_var->pos, "Indexed access to array variable must be of integer type");
+			EM_error(_var->pos, "Indexed access to array variable must be of integer type\n");
 			break;
 		}
 		te = Tr_arrayVar(lexp.exp, rexp.exp);
@@ -557,10 +557,10 @@ Tr_exp transDec(Tr_level _level, S_table _venv, S_table _tenv, A_dec _dec) {
 		// 检测变量类型
 		if (_dec->u.var.typ != NULL) {
 			varDecTy = S_look(_tenv, _dec->u.var.typ);
-			if (varDecTy == NULL) EM_error(_dec->pos, "Variable type incompatible!");
+			if (varDecTy == NULL) EM_error(_dec->pos, "Variable type incompatible!\n");
 		}
 		else {
-			if (ty->kind == Ty_nil) EM_error(_dec->pos, "NIL can't be variable type");
+			if (ty->kind == Ty_nil) EM_error(_dec->pos, "NIL can't be variable type\n");
 			varDecTy = e.ty;
 		}
 		tr_acc = Tr_allocLocal(_level, _dec->u.var.escape);//always escaping
@@ -574,7 +574,7 @@ Tr_exp transDec(Tr_level _level, S_table _venv, S_table _tenv, A_dec _dec) {
 			type = types->head;
 			if (type != NULL) {
 				// 是否被引用到
-				if (SL_check(type->name)) EM_error(_dec->pos, "The type name '%s' has been used adjacently", S_name(type->name));
+				if (SL_check(type->name)) EM_error(_dec->pos, "The type name '%s' has been used adjacently\n", S_name(type->name));
 				else SL_push(type->name);
 				S_enter(_tenv, type->name, transTyHeader(type->ty));
 				if (type->ty->kind == A_nameTy) names++;
@@ -614,7 +614,7 @@ Tr_exp transDec(Tr_level _level, S_table _venv, S_table _tenv, A_dec _dec) {
 				for (ind = 0; ind < names; ind++)
 					if (marked[ind] == FALSE) {
 						aty = nameTys[ind];
-						EM_error(aty->pos, "Cyclic type definition detected: %s", S_name(tySymbols[ind]));
+						EM_error(aty->pos, "Cyclic type definition detected: %s\n", S_name(tySymbols[ind]));
 					}
 				break;
 			}
@@ -632,7 +632,7 @@ Tr_exp transDec(Tr_level _level, S_table _venv, S_table _tenv, A_dec _dec) {
 			head = functions->head;
 			if (head != NULL) {
 				// 检查重定义
-				if (SL_check(head->name)) EM_error(_dec->pos, "The function name '%s' has been used adjacently", S_name(head->name));
+				if (SL_check(head->name)) EM_error(_dec->pos, "The function name '%s' has been used adjacently\n", S_name(head->name));
 				else SL_push(head->name);
 				// 检查返回值
 				if (head->result != NULL) resultTy = S_look(_tenv, head->result);
@@ -665,11 +665,11 @@ Tr_exp transDec(Tr_level _level, S_table _venv, S_table _tenv, A_dec _dec) {
 				if (head->result != NULL) {
 					ty = actual_ty(e.ty);
 					if (actual_ty(resultTy) != ty) {
-						if (ty->kind == Ty_void) EM_error(head->pos, "The function '%s' has no value returned", S_name(head->name));
-						else EM_error(head->pos, "The returned value of function '%s' is incompatible with the declared one", S_name(head->name));
+						if (ty->kind == Ty_void) EM_error(head->pos, "The function '%s' has no value returned\n", S_name(head->name));
+						else EM_error(head->pos, "The returned value of function '%s' is incompatible with the declared one\n", S_name(head->name));
 					}
 				}
-				else if (actual_ty(e.ty)->kind != Ty_void) EM_error(head->pos, "The returned value of procedure '%s' will be ignored", S_name(head->name));
+				else if (actual_ty(e.ty)->kind != Ty_void) EM_error(head->pos, "The returned value of procedure '%s' will be ignored\n", S_name(head->name));
 				S_endScope(_venv);
 			}
 		}
@@ -685,6 +685,12 @@ static bool looseTyCompare(Ty_ty _a, Ty_ty _b) {
 	Ty_ty b = actual_ty(_b);
 	if (a == b) return TRUE;
 	if (a->kind == Ty_nil || b->kind == Ty_nil) return TRUE;
+	if (a->kind == Ty_string && b->kind == Ty_int){
+		return TRUE;
+	}
+	if (a->kind == Ty_int && b->kind == Ty_string){
+		return TRUE;
+	}
 	return FALSE;
 }
 //检查是否在外部定义
@@ -706,17 +712,17 @@ Ty_tyList makeFormalTyList(S_table _tenv, A_fieldList _params) {
 	for (; _params != NULL; _params = _params->tail) {
 		A_field head = _params->head;
 		if (head == NULL) continue;
-		if (VL_check(head->name)) EM_error(head->pos, "The name of loop variant '%s' cannot be reused by function's argument", S_name(head->name));
+		if (VL_check(head->name)) EM_error(head->pos, "The name of loop variant '%s' cannot be reused by function's argument\n", S_name(head->name));
 		// 检查是否被定义
 		_sym = head->typ;
 		ty = S_look(_tenv, _sym);
 		if (ty == NULL) {
-			EM_error(head->pos, "Undefined type: %s", S_name(_sym));
+			EM_error(head->pos, "Undefined type: %s\n", S_name(_sym));
 			legal = legal && FALSE;
 		}
 		// 名字没有出现过的话就要插入一个新的名字?
 		if (!SL_check(head->name)) { SL_push(head->name); }
-		else EM_error(head->pos, "The name of formal argument '%s' has been used for this function", S_name(head->name));
+		else EM_error(head->pos, "The name of formal argument '%s' has been used for this function\n", S_name(head->name));
 		if (legal) {
 			tyList->tail = Ty_TyList(NULL, NULL);
 			tyList->head = ty;

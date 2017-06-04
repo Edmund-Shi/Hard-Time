@@ -200,7 +200,8 @@ Tr_exp Tr_ifExp(Tr_exp _cond, Tr_exp _t, Tr_exp _f) {
 	return ret;
 }
 //对于字符串的处理
-Tr_exp Tr_stringExp(string _str) {
+Tr_exp Tr_stringExp(Tr_level _level, string _str) {
+	// use const as string
 	T_expList list = NULL, head = NULL;
 	char *p = _str;
 	while (*p != '\0') {
@@ -217,6 +218,17 @@ Tr_exp Tr_stringExp(string _str) {
 		p++;
 	}
 	return Tr_Ex(F_externalCall("initString", head));
+
+	//using variable instead
+	//T_exp exp; 
+	//exp = F_Exp(F_staticLink(), T_Temp(F_FP()));
+	//_level = _level->parent;
+	//while (_level != _ac->level) {
+	//	_level = _level->parent;
+	//	exp = F_Exp(F_staticLink(), exp);
+	//}
+	//exp = F_Exp(access, exp);
+
 }
 //处理记录的创建，调用 malloc 函数并绑定一个临时变量
 Tr_exp Tr_recordExp_new(int _count) {

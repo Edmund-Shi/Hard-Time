@@ -62,6 +62,7 @@ static void vis_stm(FILE *out, T_stm stm, int parent) {
 		// 1) print jump condition
 		c1 = ++node_id;
 		genLabel(out, c1, rel_oper[stm->u.CJUMP.op]);
+		pr_edge(out, cur, c1);
 		// 2) print the left and right exp
 		vis_tree_exp(out, stm->u.CJUMP.left, cur);
 		vis_tree_exp(out, stm->u.CJUMP.right, cur);

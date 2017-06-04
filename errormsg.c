@@ -47,8 +47,8 @@ void EM_error(int pos, string message,...)
 		fprintf(stderr, "%d.%d: ", num, pos - lines->i);
 	va_start(ap, message);
 	vfprintf(stderr, message, ap);
-	if (lines)
-		Log(TAG, "%d.%d: %s", num, pos - lines->i, message);
+	if (lines);
+		//Log(TAG, "%d.%d: %s", num, pos - lines->i, message);
 }
 
 void EM_impossible(string msg)
