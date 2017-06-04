@@ -8,12 +8,40 @@
 #include <string.h>
 #include "translate.h"
 #include "errormsg.h"
-// local function dec
+//两个初始化构造函数
+E_enventry E_VarEntry(Tr_access _access, Ty_ty _ty) {
+	E_enventry entry = checked_malloc(sizeof(*entry));
+	entry->kind = E_varEntry;
+	entry->u.var.ty = _ty;
+	entry->u.var.access = _access;
+	return entry;
+}
+E_enventry E_FunEntry(Tr_level _level, Temp_label _label, Ty_tyList _formals, Ty_ty _result) {
+	E_enventry entry = checked_malloc(sizeof(*entry));
+	entry->kind = E_funEntry;
+	entry->u.fun.level = _level;
+	entry->u.fun.label = _label;
+	entry->u.fun.formals = _formals;
+	entry->u.fun.result = _result;
+	return entry;
+}
+//全局的虚节点头
+static struct expty *pDummyExpty;
+//IR Tree 节点的构造函数
+struct expty expTy(Tr_exp _exp, Ty_ty _ty) {
+	struct expty e;
+	e.exp = _exp;
+	e.ty = _ty;
+	return e;
+}
+
+///////////////////////////////////////////////////////////////////////////
+
 struct expty transVar(Tr_level level, S_table venv, S_table tenv, A_var v);
 struct expty transExp(Tr_level level,S_table venv, S_table tenv, A_exp a);
 Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d);
 Ty_ty transTy(S_table tenv, S_symbol sym, A_ty a);
-Ty_ty actual_ty(Ty_ty ty); // return the actual type of ty
+Ty_ty actual_ty(Ty_ty ty);
 static bool looseTyCompare(Ty_ty a, Ty_ty b);
 Ty_ty transTyHeader(A_ty a);
 bool isReferToOutside(bool* marked, int marked_len, S_symbol* syms, S_symbol refered);
@@ -29,8 +57,6 @@ static stack_node variant_list = NULL;//variant_node
 static bool pointerCompare(void *a, void *b) {
 	return a == b ? TRUE : FALSE;
 }
-
-
 /* Symbol list START */
 static void SL_push(S_symbol sym);
 static void SL_pop();
@@ -67,26 +93,17 @@ static bool VL_isEmpty() {
 	return variant_list == NULL;
 }
 
-
 S_table E_base_tenv();
 S_table E_base_venv();
 
 // IR tree with type check 
-
-struct expty expTy(Tr_exp exp, Ty_ty ty) {
-	struct expty e;
-	e.exp = exp;
-	e.ty = ty;
-	return e;
-}
-
 // 全局的虚结点头
-static struct expty *dummy_expty_p;
+
 
 void init() {
-	dummy_expty_p = (struct expty*) checked_malloc(sizeof(struct expty));
-	dummy_expty_p->exp = Tr_voidExp();
-	dummy_expty_p->ty = Ty_Void();
+	pDummyExpty = (struct expty*) checked_malloc(sizeof(struct expty));
+	pDummyExpty->exp = Tr_voidExp();
+	pDummyExpty->ty = Ty_Void();
 }
 
 Tr_level Tr_getParent(Tr_level level) {
@@ -470,10 +487,10 @@ Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
 	return tr_exp;
 }
 
-struct expty transExp(Tr_level level, S_table venv, S_table tenv, A_exp a) {
+struct expty transExp(Tr_level level, S_table venv, S_table tenv, A_exp a)   {
 	string TAG = "TRANSEXP";
 	if (a == NULL) {
-		return *dummy_expty_p;
+		return *pDummyExpty;
 	}
 
 	Tr_exp te; // 总的表达式
@@ -908,7 +925,6 @@ struct expty transExp(Tr_level level, S_table venv, S_table tenv, A_exp a) {
 	assert(0);
 }
 
-
 Ty_ty actual_ty(Ty_ty ty) {
 	if (ty->kind == Ty_name){
 		return actual_ty(ty->u.name.ty);
@@ -926,23 +942,7 @@ static bool looseTyCompare(Ty_ty a, Ty_ty b) {
 	}
 	return FALSE;
 }
-E_enventry E_VarEntry(Tr_access access, Ty_ty ty) {
-	E_enventry entry = checked_malloc(sizeof(*entry));
-	entry->kind = E_varEntry;
-	entry->u.var.ty = ty;
-	entry->u.var.access = access;
-	return entry;
-}
 
-E_enventry E_FunEntry(Tr_level level, Temp_label label, Ty_tyList formals, Ty_ty result) {
-	E_enventry entry = checked_malloc(sizeof(*entry));
-	entry->kind = E_funEntry;
-	entry->u.fun.formals = formals;
-	entry->u.fun.result = result;
-	entry->u.fun.level = level;
-	entry->u.fun.label = label;
-	return entry;
-}
 
 // base type env
 S_table E_base_tenv(void) {

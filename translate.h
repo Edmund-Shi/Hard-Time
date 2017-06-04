@@ -104,9 +104,6 @@ Tr_exp Tr_assignExp(Tr_exp, Tr_exp);
 Tr_exp Tr_fieldVar(Tr_exp, int);
 //多个语句拆分
 Tr_exp Tr_seqExp(Tr_exp*, int);
-//函数声明部分的接口函数
-void Tr_procEntryExit(Tr_level, Tr_exp, Tr_accessList, Temp_label);
-F_fragList Tr_getResult();
 //获取最终的结果
 T_stm getResult(struct expty);
 #endif

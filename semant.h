@@ -12,7 +12,7 @@ struct E_enventry_ {
 		struct {
 			Tr_access access;
 			Ty_ty ty;
-		}var;
+		} var;
 		struct {
 			Tr_level level;
 			Temp_label label;
@@ -26,16 +26,10 @@ struct expty {
 	Ty_ty ty;
 };
 // 初始化构造函数
-E_enventry E_VarEntry(Tr_access access, Ty_ty ty);
-E_enventry E_FunEntry(Tr_level level, Temp_label label, Ty_tyList formals, Ty_ty result);
+E_enventry E_VarEntry(Tr_access, Ty_ty);
+E_enventry E_FunEntry(Tr_level, Temp_label, Ty_tyList, Ty_ty);
 
 // #bug 可能存在问题
 T_stm SEM_transProg(A_exp exp);
-
-// The following functions only available to semant.c file
-//struct expty transVar(S_table venv, S_table tenv, A_var v);
-//struct expty transExp(S_table venv, S_table tenv, A_exp a);
-//void transDec(S_table venv, S_table tenv, A_dec d);
-//Ty_ty transTy(S_table tenv, A_ty a);
 
 #endif /* end ifnedf SEMANT_H_ */ 
